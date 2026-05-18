@@ -1,0 +1,5 @@
+/Users/will/.openclaw/workspace-project/code-agent/backend/src/test/java/com/seatflow/integration/api/AuthApiTest.java
+/Users/will/.openclaw/workspace-project/code-agent/backend/src/test/java/com/seatflow/integration/api/RbacApiTest.java
+/Users/will/.openclaw/workspace-project/code-agent/backend/src/test/java/com/seatflow/security/JwtTokenProviderTest.java
+/Users/will/.openclaw/workspace-project/code-agent/backend/src/test/java/com/seatflow/service/AuthServiceTest.java
+/Users/will/.openclaw/workspace-project/code-agent/backend/src/test/java/com/seatflow/service/RbacServiceTest.java
