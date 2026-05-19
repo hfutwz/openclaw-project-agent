@@ -49,6 +49,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 登录接口允许所有访问（包括已登录用户重新登录）
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        // WebSocket 端点（STOMP 连接需要在认证后）
+                        .requestMatchers("/ws/**", "/ws").permitAll()
                         // 静态资源
                         .requestMatchers("/error", "/favicon.ico").permitAll()
                         // 管理端接口需持有对应权限

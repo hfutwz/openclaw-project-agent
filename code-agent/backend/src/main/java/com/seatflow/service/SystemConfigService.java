@@ -37,4 +37,26 @@ public class SystemConfigService {
     public void batchUpdate(Map<String, String> configs) {
         configs.forEach(this::update);
     }
+
+    /**
+     * 获取配置值（带默认值）
+     */
+    public String getValue(String key, String defaultValue) {
+        LambdaQueryWrapper<SystemConfig> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SystemConfig::getConfigKey, key);
+        SystemConfig config = systemConfigMapper.selectOne(wrapper);
+        return config != null ? config.getConfigValue() : defaultValue;
+    }
+
+    /**
+     * 获取 int 类型配置值（带默认值）
+     */
+    public int getIntValue(String key, int defaultValue) {
+        String val = getValue(key, String.valueOf(defaultValue));
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
 }

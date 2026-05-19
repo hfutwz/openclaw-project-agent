@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS t_reservation (
     end_time TIME NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     cancelled_by VARCHAR(20),
+    created_by VARCHAR(20) DEFAULT 'STUDENT' COMMENT '创建者: STUDENT/ADMIN',
     reminded_before TINYINT NOT NULL DEFAULT 0,
     warned_late TINYINT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

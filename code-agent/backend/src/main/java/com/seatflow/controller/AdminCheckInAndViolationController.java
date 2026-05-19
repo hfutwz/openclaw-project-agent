@@ -19,9 +19,9 @@ public class AdminCheckInAndViolationController {
     private final ViolationService violationService;
 
     /**
-     * A-CI03: 管理端获取/刷新签到编码
+     * A-CODE01: 管理端获取教室当日签到编码
      */
-    @GetMapping("/check-in-codes/{roomId}")
+    @GetMapping("/rooms/{roomId}/check-in-code")
     public Result<Map<String, String>> getCheckInCode(@PathVariable Long roomId) {
         String code = checkInService.getTodayCode(roomId);
         return Result.ok(Map.of("code", code));

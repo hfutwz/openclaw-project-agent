@@ -8,34 +8,31 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * 学生端签到接口 — A-RES03: POST /api/reservations/check-in
+ */
 @RestController
-@RequestMapping("/api/check-in")
+@RequestMapping("/api/reservations/check-in")
 @RequiredArgsConstructor
 public class CheckInController {
 
     private final CheckInService checkInService;
 
     /**
-     * A-CI01: 学生签到
+     * A-RES03: 学生签到 — 只需输入签到编码，自动查找对应预约
      */
     @PostMapping
-    public Result<Map<String, Object>> checkIn(@RequestBody Map<String, Object> body) {
-        Long reservationId = Long.valueOf(body.get("reservationId").toString());
-        String code = body.get("code") != null ? body.get("code").toString() : null;
+    public Result<Map<String, Object>> checkIn(@RequestBody Map<String, String> body) {
+        String code = body.get("code");
+        if (code == null || code.trim().isEmpty()) {
+            return Result.fail(400, "请输入签到编码");
+        }
 
-        Reservation reservation = checkInService.checkIn(reservationId, code);
+        Reservation reservation = checkInService.checkIn(code.trim());
         return Result.ok(Map.of(
                 "reservationId", reservation.getId(),
-                "status", reservation.getStatus()
+                "status", reservation.getStatus(),
+                "message", "签到成功"
         ));
-    }
-
-    /**
-     * A-CI02: 获取今日签到编码
-     */
-    @GetMapping("/code/{roomId}")
-    public Result<Map<String, String>> getTodayCode(@PathVariable Long roomId) {
-        String code = checkInService.getTodayCode(roomId);
-        return Result.ok(Map.of("code", code));
     }
 }

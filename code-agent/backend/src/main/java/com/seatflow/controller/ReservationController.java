@@ -34,15 +34,6 @@ public class ReservationController {
     }
 
     /**
-     * A-RES03: 签到（M4实现完整链路，M3仅占位）
-     */
-    @PostMapping("/check-in")
-    public Result<Void> checkIn(@RequestBody java.util.Map<String, String> body) {
-        // M4 will implement full check-in logic
-        return Result.fail("签到功能将在M4阶段实现");
-    }
-
-    /**
      * A-RES04: 我的当前预约
      */
     @GetMapping("/current")

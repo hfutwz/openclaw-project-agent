@@ -19,6 +19,7 @@ public class Reservation {
     private LocalTime endTime;
     private String status;
     private String cancelledBy;
+    private String createdBy; // "STUDENT" 或 "ADMIN"，标识谁创建的预约
     private Integer remindedBefore;
     private Integer warnedLate;
     private LocalDateTime createdAt;

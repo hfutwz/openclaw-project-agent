@@ -23,15 +23,16 @@ const CheckInPage: React.FC = () => {
     fetch()
   }, [])
 
-  const handleCheckIn = async (reservationId: number) => {
+  const handleCheckIn = async () => {
     if (!checkInCode) {
       message.warning('请输入签到编码')
       return
     }
     try {
-      const res = await checkInApi.checkIn(reservationId, checkInCode)
+      const res = await checkInApi.checkIn(checkInCode)
       if (res.data.code === 200) {
         message.success('签到成功！')
+        setCheckInCode('')
         // Refresh list
         const listRes = await reservationApi.listCurrent()
         if (listRes.data.code === 200) setCurrentReservations(listRes.data.data)
@@ -56,13 +57,7 @@ const CheckInPage: React.FC = () => {
           maxLength={6}
           value={checkInCode}
           onChange={(e) => setCheckInCode(e.target.value)}
-          onSearch={() => {
-            if (currentReservations.length > 0) {
-              handleCheckIn(currentReservations[0].id)
-            } else {
-              message.warning('暂无待签到的预约')
-            }
-          }}
+          onSearch={handleCheckIn}
         />
       </Card>
 
@@ -76,7 +71,7 @@ const CheckInPage: React.FC = () => {
             <List.Item
               actions={[
                 <Button key="ci" type="primary" icon={<CheckCircleOutlined />}
-                  onClick={() => handleCheckIn(item.id)}>签到</Button>
+                  onClick={handleCheckIn}>签到</Button>
               ]}
             >
               <List.Item.Meta

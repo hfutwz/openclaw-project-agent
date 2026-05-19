@@ -19,4 +19,5 @@ public class ReservationResponse {
     private String endTime;
     private String status;
     private String cancelledBy;
+    private String createdBy;
 }

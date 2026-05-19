@@ -34,6 +34,7 @@ public class ReservationService {
     private final SeatMapper seatMapper;
     private final RoomMapper roomMapper;
     private final UserMapper userMapper;
+    private final SystemConfigService systemConfigService;
 
     /**
      * M3-B02: 创建预约 — 冲突检测 + 开放时间校验 + 院系权限 + 最大时长
@@ -42,7 +43,21 @@ public class ReservationService {
     public ReservationResponse create(ReservationCreateRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw new BusinessException(401, "未登录");
+        return doCreate(request, userId, "STUDENT");
+    }
 
+    /**
+     * 管理端：代客预约
+     */
+    @Transactional
+    public ReservationResponse adminCreate(Long forUserId, ReservationCreateRequest request) {
+        return doCreate(request, forUserId, "ADMIN");
+    }
+
+    /**
+     * 内部创建预约逻辑
+     */
+    private ReservationResponse doCreate(ReservationCreateRequest request, Long userId, String createdBy) {
         User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException(404, "用户不存在");
 
@@ -80,10 +95,11 @@ public class ReservationService {
             throw new BusinessException(400, "预约时间不在自习室开放时间内(" + room.getOpenTime() + "-" + room.getCloseTime() + ")");
         }
 
-        // 最大时长校验 (默认4小时，后续从SystemConfig读取)
+        // 最大时长校验 (从 SystemConfig 读取，默认4小时)
         long hours = java.time.Duration.between(startTime, endTime).toHours();
-        if (hours <= 0 || hours > 4) {
-            throw new BusinessException(400, "单次预约时长为1-4小时");
+        int maxHours = systemConfigService.getIntValue("max_reservation_hours", 4);
+        if (hours <= 0 || hours > maxHours) {
+            throw new BusinessException(400, "单次预约时长为1-" + maxHours + "小时");
         }
 
         // 座位时段冲突检测 (区间重叠)
@@ -119,6 +135,7 @@ public class ReservationService {
         reservation.setStatus("PENDING");
         reservation.setRemindedBefore(0);
         reservation.setWarnedLate(0);
+        reservation.setCreatedBy(createdBy);
         reservationMapper.insert(reservation);
 
         return toReservationResponse(reservation, seat, room);
@@ -266,16 +283,6 @@ public class ReservationService {
         return responsePage;
     }
 
-    /**
-     * 管理端：代客预约
-     */
-    @Transactional
-    public ReservationResponse adminCreate(Long forUserId, ReservationCreateRequest request) {
-        // 暂时用原方法，后续在M5完善权限校验
-        // TODO: set forUserId instead of current user
-        return create(request);
-    }
-
     private ReservationResponse toReservationResponse(Reservation r, Seat seat, Room room) {
         return ReservationResponse.builder()
                 .id(r.getId())
@@ -287,6 +294,7 @@ public class ReservationService {
                 .endTime(r.getEndTime() != null ? r.getEndTime().toString() : null)
                 .status(r.getStatus())
                 .cancelledBy(r.getCancelledBy())
+                .createdBy(r.getCreatedBy())
                 .build();
     }
 }
