@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * [SECURITY-DISABLED] 原 Spring Security 配置已注释
@@ -37,6 +39,14 @@ import org.springframework.context.annotation.Configuration;
 // @EnableWebSecurity          // [SECURITY-DISABLED]
 // @EnableMethodSecurity       // [SECURITY-DISABLED] 取消注释可恢复 @PreAuthorize
 public class SecurityConfig {
+
+    /**
+     * MVP 阶段保留 PasswordEncoder bean，供 AuthService 和 UserManageService 使用
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     /* [SECURITY-DISABLED — 原配置保留，随时可恢复
     private final JwtAuthFilter jwtAuthFilter;
