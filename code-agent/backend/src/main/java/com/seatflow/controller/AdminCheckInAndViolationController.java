@@ -6,6 +6,7 @@ import com.seatflow.entity.Violation;
 import com.seatflow.service.CheckInService;
 import com.seatflow.service.ViolationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyAuthority('violation:view', 'room:manage')")
 public class AdminCheckInAndViolationController {
 
     private final CheckInService checkInService;

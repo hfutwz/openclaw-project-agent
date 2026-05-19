@@ -25,11 +25,15 @@ export const useAuth = () => {
     try {
       const res = await api.post('/auth/login', { username, password }) as any;
       if (res.data.code === 200) {
-        // [SECURITY-DISABLED] 登录接口直接返回 userInfo
-        const info = res.data.data.userInfo || res.data.data;
+        const data = res.data.data;
+        const info = data.userInfo || data;
         if (info) {
           setUserInfo(info);
           localStorage.setItem('userInfo', JSON.stringify(info));
+        }
+        // 存储 JWT Token
+        if (data.token) {
+          localStorage.setItem('token', data.token);
         }
         return { success: true };
       }
@@ -44,12 +48,13 @@ export const useAuth = () => {
 
   // 登出
   const logout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('userInfo');
     setUserInfo(null);
     navigate('/login');
   };
 
-  const isLoggedIn = (): boolean => !!userInfo;
+  const isLoggedIn = (): boolean => !!localStorage.getItem('token');
   const isAdmin = (): boolean => userInfo?.userType === 'ADMIN';
   const isStudent = (): boolean => userInfo?.userType === 'STUDENT';
 

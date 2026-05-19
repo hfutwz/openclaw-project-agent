@@ -38,6 +38,14 @@ public class SecurityUtils {
     }
 
     /**
+     * 获取当前登录用户名，未登录返回 null
+     */
+    public static String getCurrentUsername() {
+        CustomUserDetails user = getCurrentUser();
+        return user != null ? user.getUsername() : null;
+    }
+
+    /**
      * 判断当前用户是否拥有指定权限
      */
     public static boolean hasPermission(String permission) {

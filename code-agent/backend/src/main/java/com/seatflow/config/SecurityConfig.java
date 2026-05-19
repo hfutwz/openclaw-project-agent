@@ -1,6 +1,5 @@
 package com.seatflow.config;
 
-/* [SECURITY-DISABLED]
 import com.seatflow.security.JwtAuthFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,55 +21,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+
 import java.util.Map;
-*/
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * [SECURITY-DISABLED] MVP 阶段：禁用所有 HTTP Security 拦截，全部放行。
- * 必须显式提供 SecurityFilterChain bean，否则 Spring Boot auto-config 会启用
- * 默认的 formLogin + 302 重定向，导致 POST /api/auth/login 被拦截并重定向到 /login。
- * 恢复完整 Security：参考注释中的原配置。
+ * Spring Security 配置：JWT 认证 + RBAC 权限控制
+ * - JWT Token 认证（无状态）
+ * - @PreAuthorize 方法级权限
+ * - 401/403 JSON 响应（不重定向）
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /**
-     * 全放行 SecurityFilterChain：禁用 CSRF、Session、formLogin、httpBasic，
-     * 所有请求直接通过，由业务层做用户名+密码校验。
-     */
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .build();
-    }
-
-    /**
-     * MVP 阶段保留 PasswordEncoder bean，供 AuthService 和 UserManageService 使用
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    /* [SECURITY-DISABLED — 原配置保留，随时可恢复
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
     private final CorsConfigurationSource corsConfigurationSource;
@@ -134,5 +102,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    */
 }

@@ -7,6 +7,7 @@ import com.seatflow.dto.response.SeatResponse;
 import com.seatflow.service.SeatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/rooms/{roomId}/seats")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('seat:manage')")
 public class AdminSeatController {
 
     private final SeatService seatService;

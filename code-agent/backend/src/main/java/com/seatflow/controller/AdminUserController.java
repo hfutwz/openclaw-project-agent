@@ -8,6 +8,7 @@ import com.seatflow.dto.response.UserResponse;
 import com.seatflow.service.UserManageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('user:manage')")
 public class AdminUserController {
 
     private final UserManageService userManageService;

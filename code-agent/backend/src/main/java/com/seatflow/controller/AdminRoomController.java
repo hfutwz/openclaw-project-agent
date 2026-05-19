@@ -8,11 +8,13 @@ import com.seatflow.dto.response.RoomResponse;
 import com.seatflow.service.RoomService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/rooms")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('room:manage')")
 public class AdminRoomController {
 
     private final RoomService roomService;

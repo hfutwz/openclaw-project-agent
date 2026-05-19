@@ -10,8 +10,17 @@ const api = axios.create({
   },
 });
 
-// [SECURITY-DISABLED] MVP 阶段：不再附加 JWT Token
-// 原请求拦截器已移除，直接放行所有请求
+// 请求拦截器：附加 JWT Token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // 响应拦截器：统一错误处理，使用弹窗提示
 api.interceptors.response.use(
@@ -23,6 +32,7 @@ api.interceptors.response.use(
 
       switch (status) {
         case 401:
+          localStorage.removeItem('token');
           localStorage.removeItem('userInfo');
           // 使用 pathname 保留端口号，不强制跳转（避免无限重定向）
           if (window.location.pathname !== '/login') {

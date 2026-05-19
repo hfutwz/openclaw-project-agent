@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-// import { useAuth } from './hooks/useAuth' // [SECURITY-DISABLED] MVP 测试阶段暂时不用
+import { useAuth } from './hooks/useAuth'
 
 // Layouts
 import StudentLayout from './layouts/StudentLayout'
@@ -48,24 +48,22 @@ import Search from './pages/student/Search'
 // Admin placeholder pages (removed, implemented in M5)
 
 // 路由守卫：需要登录
-// [SECURITY-DISABLED] MVP 测试阶段：允许直接访问所有页面，无需登录
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // const { isLoggedIn } = useAuth()
-  // if (!isLoggedIn()) {
-  //   return <Navigate to="/login" replace />
-  // }
+  const { isLoggedIn } = useAuth()
+  if (!isLoggedIn()) {
+    return <Navigate to="/login" replace />
+  }
   return <>{children}</>
 }
 
 // 路由守卫：仅管理员
-// [SECURITY-DISABLED] MVP 阶段注释掉管理员路由保护，所有登录用户可访问所有页面
-// const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-//   const { userInfo } = useAuth()
-//   if (userInfo?.userType !== 'ADMIN') {
-//     return <Navigate to="/403" replace />
-//   }
-//   return <>{children}</>
-// }
+const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth()
+  if (user?.userType !== 'ADMIN') {
+    return <Navigate to="/403" replace />
+  }
+  return <>{children}</>
+}
 
 const App: React.FC = () => {
   return (
@@ -91,12 +89,11 @@ const App: React.FC = () => {
         </Route>
 
         {/* 管理端路由 */}
-        {/* [SECURITY-DISABLED] 移除 RequireAdmin 守卫，所有登录用户可访问管理端 */}
         <Route path="/admin" element={
           <RequireAuth>
-            {/* [SECURITY-DISABLED] <RequireAdmin> */}
-            <AdminLayout />
-            {/* [SECURITY-DISABLED] </RequireAdmin> */}
+            <RequireAdmin>
+              <AdminLayout />
+            </RequireAdmin>
           </RequireAuth>
         }>
           <Route index element={<Navigate to="dashboard" replace />} />

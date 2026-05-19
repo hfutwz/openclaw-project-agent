@@ -14,15 +14,13 @@ import {
   UserOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../hooks/useAuth'
-// [SECURITY-DISABLED] MVP 阶段不使用权限检查
-// import { usePermissions } from '../hooks/usePermissions'
+import { usePermissions } from '../hooks/usePermissions'
 
 const { Header, Sider, Content } = Layout
 
 const AdminLayout: React.FC = () => {
   const { userInfo, logout } = useAuth()
-  // [SECURITY-DISABLED] MVP 阶段注释权限检查
-  // const { hasPermission } = usePermissions()
+  const { hasPermission } = usePermissions()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -38,9 +36,8 @@ const AdminLayout: React.FC = () => {
     { key: '/admin/check-in-codes', icon: <KeyOutlined />, label: '签到编码', permission: 'room:manage' },
   ]
 
-  // [SECURITY-DISABLED] MVP 阶段显示所有菜单项
-  // const menuItems = allMenuItems.filter(item => hasPermission(item.permission))
-  const menuItems = allMenuItems
+  // 按权限过滤菜单项
+  const menuItems = allMenuItems.filter(item => hasPermission(item.permission))
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

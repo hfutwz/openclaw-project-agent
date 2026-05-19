@@ -4,6 +4,7 @@ import com.seatflow.common.result.Result;
 import com.seatflow.entity.SystemConfig;
 import com.seatflow.service.SystemConfigService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/configs")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('system:config')")
 public class AdminConfigController {
 
     private final SystemConfigService systemConfigService;

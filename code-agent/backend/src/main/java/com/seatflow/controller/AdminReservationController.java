@@ -7,11 +7,13 @@ import com.seatflow.dto.response.ReservationResponse;
 import com.seatflow.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/reservations")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyAuthority('reservation:manage', 'reservation:view')")
 public class AdminReservationController {
 
     private final ReservationService reservationService;
