@@ -1,10 +1,12 @@
 import { useCallback } from 'react';
-import type { UserInfo } from './useAuth';
+// [SECURITY-DISABLED] 恢复 RBAC 时取消注释
+// import type { UserInfo } from './useAuth';
 
-function getUser(): UserInfo | null {
-  const saved = localStorage.getItem('userInfo');
-  return saved ? JSON.parse(saved) : null;
-}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// function getUser(): UserInfo | null {
+//   const saved = localStorage.getItem('userInfo');
+//   return saved ? JSON.parse(saved) : null;
+// }
 
 /**
  * [SECURITY-DISABLED] MVP 阶段：所有权限检查返回 true
