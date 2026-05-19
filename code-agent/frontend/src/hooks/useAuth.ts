@@ -21,41 +21,20 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // [SECURITY-DISABLED] 改为通过 username 参数获取用户信息
-  const fetchUserInfo = async () => {
-    const username = localStorage.getItem('loginUsername');
-    if (!username) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await api.get(`/auth/me?username=${username}`) as any;
-      if (res.code === 200) {
-        const info = res.data as UserInfo;
-        setUserInfo(info);
-        localStorage.setItem('userInfo', JSON.stringify(info));
-      }
-    } catch {
-      localStorage.removeItem('loginUsername');
-      localStorage.removeItem('userInfo');
-      setUserInfo(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // 登录
   const login = async (username: string, password: string) => {
     try {
       const res = await api.post('/auth/login', { username, password }) as any;
-      if (res.code === 200) {
-        // [SECURITY-DISABLED] 不再存 token，只存 username
-        localStorage.setItem('loginUsername', username);
-        await fetchUserInfo();
+      if (res.data.code === 200) {
+        // [SECURITY-DISABLED] 登录接口直接返回 userInfo
+        const info = res.data.data.userInfo || res.data.data;
+        if (info) {
+          setUserInfo(info);
+          localStorage.setItem('userInfo', JSON.stringify(info));
+        }
         return { success: true };
       }
-      return { success: false, message: res.message };
+      return { success: false, message: res.data.message };
     } catch (error: any) {
       return {
         success: false,
@@ -66,22 +45,17 @@ export const useAuth = () => {
 
   // 登出
   const logout = () => {
-    localStorage.removeItem('loginUsername');
     localStorage.removeItem('userInfo');
     setUserInfo(null);
     navigate('/login');
   };
 
-  // [SECURITY-DISABLED] 改为检查 userInfo 而非 token
-  const isLoggedIn = (): boolean => !!localStorage.getItem('loginUsername');
+  const isLoggedIn = (): boolean => !!userInfo;
   const isAdmin = (): boolean => userInfo?.userType === 'ADMIN';
   const isStudent = (): boolean => userInfo?.userType === 'STUDENT';
 
-  // 初始化时同步用户信息
   useEffect(() => {
-    if (localStorage.getItem('loginUsername') && !userInfo) {
-      fetchUserInfo();
-    }
+    // MVP 阶段无需初始化 token
   }, []);
 
   return {
@@ -93,6 +67,5 @@ export const useAuth = () => {
     isLoggedIn,
     isAdmin,
     isStudent,
-    fetchUserInfo,
   };
 };

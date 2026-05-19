@@ -10,18 +10,8 @@ const api = axios.create({
   },
 });
 
-// [SECURITY-DISABLED] 原 JWT Token 自动附加逻辑已注释
-// 请求拦截器：不再附加 Authorization 头
-// api.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
+// [SECURITY-DISABLED] MVP 阶段：不再附加 JWT Token
+// 原请求拦截器已移除，直接放行所有请求
 
 // 响应拦截器：统一错误处理
 api.interceptors.response.use(
@@ -33,16 +23,17 @@ api.interceptors.response.use(
 
       switch (status) {
         case 401:
-          // [SECURITY-DISABLED] 不再清除 token
+          // [SECURITY-DISABLED] 清除本地用户信息
           localStorage.removeItem('userInfo');
           if (window.location.pathname !== '/login') {
             message.error('登录已过期，请重新登录');
             window.location.href = '/login';
           }
           break;
-        case 403:
-          message.error('无权限访问');
-          break;
+        // [SECURITY-DISABLED] 原 403 拦截改为普通错误提示
+        // case 403:
+        //   message.error('无权限访问');
+        //   break;
         case 400:
           message.error(msg);
           break;
@@ -50,10 +41,10 @@ api.interceptors.response.use(
           message.error('服务器内部错误');
           break;
         default:
-          message.error(msg);
+          message.error(`请求失败 (${status})`);
       }
     } else if (error.request) {
-      message.error('网络错误，请检查连接');
+      message.error('网络错误，请检查服务是否正常运行');
     } else {
       message.error('请求配置错误');
     }

@@ -2,45 +2,32 @@ import React, { useState } from 'react'
 import { Form, Input, Button, Card, Typography, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import api from '../services/api'
+import { useAuth } from '../hooks/useAuth'
 
 const LoginPage: React.FC = () => {
+  const { login } = useAuth()
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const [form] = Form.useForm()
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true)
-    // 清除旧 token，避免旧 token 干扰登录请求
+    // [SECURITY-DISABLED] 清除旧的认证缓存
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')
+    localStorage.removeItem('loginUsername')
+
     try {
-      const res = await api.post('/auth/login', values)
-      if (res.data.code === 200) {
-        const { token } = res.data.data
-        localStorage.setItem('token', token)
-
-        // 获取用户信息
-        const meRes = await api.get('/auth/me')
-        if (meRes.data.code === 200) {
-          const userInfo = meRes.data.data
-          localStorage.setItem('userInfo', JSON.stringify(userInfo))
-          message.success('登录成功')
-
-          // 根据用户类型跳转
-          if (userInfo.userType === 'ADMIN') {
-            navigate('/admin/dashboard')
-          } else {
-            navigate('/student/rooms')
-          }
-        }
+      const result = await login(values.username, values.password)
+      if (result.success) {
+        message.success('登录成功')
+        navigate('/student/rooms')
       } else {
-        message.error(res.data.message || '登录失败')
+        message.error(result.message || '登录失败')
         form.setFieldsValue({ password: '' })
       }
-    } catch (error: any) {
-      const msg = error.response?.data?.message || error.message || '登录失败'
-      message.error(msg)
+    } catch {
+      message.error('登录失败，请稍后再试')
       form.setFieldsValue({ password: '' })
     } finally {
       setLoading(false)
