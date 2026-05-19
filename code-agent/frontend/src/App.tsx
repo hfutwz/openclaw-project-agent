@@ -61,13 +61,14 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 }
 
 // 路由守卫：仅管理员
-const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { userInfo } = useAuth()
-  if (userInfo?.userType !== 'ADMIN') {
-    return <Navigate to="/403" replace />
-  }
-  return <>{children}</>
-}
+// [SECURITY-DISABLED] MVP 阶段注释掉管理员路由保护，所有登录用户可访问所有页面
+// const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+//   const { userInfo } = useAuth()
+//   if (userInfo?.userType !== 'ADMIN') {
+//     return <Navigate to="/403" replace />
+//   }
+//   return <>{children}</>
+// }
 
 const App: React.FC = () => {
   return (
@@ -93,11 +94,12 @@ const App: React.FC = () => {
         </Route>
 
         {/* 管理端路由 */}
+        {/* [SECURITY-DISABLED] 移除 RequireAdmin 守卫，所有登录用户可访问管理端 */}
         <Route path="/admin" element={
           <RequireAuth>
-            <RequireAdmin>
-              <AdminLayout />
-            </RequireAdmin>
+            {/* [SECURITY-DISABLED] <RequireAdmin> */}
+            <AdminLayout />
+            {/* [SECURITY-DISABLED] </RequireAdmin> */}
           </RequireAuth>
         }>
           <Route index element={<Navigate to="dashboard" replace />} />

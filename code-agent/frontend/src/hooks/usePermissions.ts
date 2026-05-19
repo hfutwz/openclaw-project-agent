@@ -7,32 +7,34 @@ function getUser(): UserInfo | null {
 }
 
 /**
- * 权限检查 hook
+ * [SECURITY-DISABLED] MVP 阶段：所有权限检查返回 true
+ * 恢复 RBAC 时取消注释原逻辑
  */
 export function usePermissions() {
 
-  const hasPermission = useCallback((permission: string): boolean => {
-    const user = getUser();
-    return user?.permissions.includes(permission) ?? false;
+  const hasPermission = useCallback((_permission: string): boolean => {
+    // [SECURITY-DISABLED] 原逻辑：检查 user.permissions
+    return true;
   }, []);
 
-  const hasAnyPermission = useCallback((permissions: string[]): boolean => {
-    const user = getUser();
-    if (!user) return false;
-    return permissions.some((p) => user.permissions.includes(p));
+  const hasAnyPermission = useCallback((_permissions: string[]): boolean => {
+    // [SECURITY-DISABLED] 原逻辑：检查任意权限
+    return true;
   }, []);
 
-  const hasRole = useCallback((role: string): boolean => {
-    const user = getUser();
-    return user?.roles.includes(role) ?? false;
+  const hasRole = useCallback((_role: string): boolean => {
+    // [SECURITY-DISABLED] 原逻辑：检查 user.roles
+    return true;
   }, []);
 
   const isAdmin = useCallback((): boolean => {
-    return getUser()?.userType === 'ADMIN';
+    // [SECURITY-DISABLED] 原逻辑：检查 userType === 'ADMIN'
+    return true;
   }, []);
 
   const isStudent = useCallback((): boolean => {
-    return getUser()?.userType === 'STUDENT';
+    // [SECURITY-DISABLED] 原逻辑：检查 userType === 'STUDENT'
+    return true;
   }, []);
 
   return {
