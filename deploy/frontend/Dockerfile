@@ -9,7 +9,7 @@ COPY code-agent/frontend/package.json code-agent/frontend/pnpm-lock.yaml* ./
 
 # 安装 pnpm 并安装依赖
 RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm install --config.onlyBuiltDependencies=esbuild || pnpm install --config.onlyBuiltDependencies=esbuild
 
 # 复制源码并构建
 COPY code-agent/frontend ./
