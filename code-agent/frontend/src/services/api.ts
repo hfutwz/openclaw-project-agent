@@ -24,13 +24,11 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           localStorage.removeItem('userInfo');
+          // 使用 pathname 保留端口号，不强制跳转（避免无限重定向）
           if (window.location.pathname !== '/login') {
             Modal.error({
               title: '登录已过期',
               content: '请重新登录',
-              onOk: () => {
-                window.location.href = '/login';
-              },
             });
           }
           break;
