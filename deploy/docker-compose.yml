@@ -2,7 +2,7 @@
 # SeatFlow 部署配置
 # ======================
 # 端口说明：
-#   前端: 80 (http://localhost)
+#   前端: 8001 (http://localhost:8001)
 #   后端: 8081 (http://localhost:8081)
 #   MySQL: 3307
 # ======================
@@ -60,7 +60,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "${FRONTEND_PORT:-80}:80"
+      - "${FRONTEND_PORT:-8001}:80"
     networks:
       - seatflow-network
 
