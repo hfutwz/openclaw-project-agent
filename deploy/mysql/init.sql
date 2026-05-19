@@ -1,6 +1,9 @@
 -- SeatFlow 数据库初始化脚本
 -- 由 schema.sql + data.sql 合并生成
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS seatflow DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE seatflow;
 
