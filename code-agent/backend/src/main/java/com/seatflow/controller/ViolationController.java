@@ -18,7 +18,7 @@ public class ViolationController {
     /**
      * A-VIO01: 学生查看自己的违约记录
      */
-    @GetMapping("/my")
+    @GetMapping("/mine")
     public Result<List<Violation>> listMyViolations() {
         return Result.ok(violationService.listMyViolations());
     }

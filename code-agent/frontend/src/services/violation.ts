@@ -9,7 +9,7 @@ export interface ViolationRecord {
 }
 
 export const violationApi = {
-  listMy: () => api.get<{ code: number; data: ViolationRecord[] }>('/violations/my'),
+  listMy: () => api.get<{ code: number; data: ViolationRecord[] }>('/violations/mine'),
   adminList: (params: { page?: number; size?: number; userId?: number; type?: string }) =>
     api.get<{ code: number; data: { records: ViolationRecord[]; total: number } }>('/admin/violations', { params }),
 }

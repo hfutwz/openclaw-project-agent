@@ -66,11 +66,11 @@ export const roleApi = {
 }
 
 export const dashboardApi = {
-  getStats: () => api.get<{ code: number; data: DashboardData }>('/admin/dashboard'),
+  getStats: () => api.get<{ code: number; data: DashboardData }>('/admin/statistics/dashboard'),
 }
 
 export const configApi = {
-  list: () => api.get<{ code: number; data: SystemConfigItem[] }>('/admin/config'),
-  batchUpdate: (data: Record<string, string>) => api.put('/admin/config', data),
-  update: (key: string, value: string) => api.put(`/admin/config/${key}`, { value }),
+  list: () => api.get<{ code: number; data: SystemConfigItem[] }>('/admin/configs'),
+  batchUpdate: (data: Record<string, string>) => api.put('/admin/configs', data),
+  update: (key: string, value: string) => api.put(`/admin/configs/${key}`, { value }),
 }

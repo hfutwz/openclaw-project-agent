@@ -156,6 +156,9 @@ public class ReservationService {
         if ("CANCELLED".equals(reservation.getStatus())) {
             throw new BusinessException(400, "预约已取消");
         }
+        if ("CHECKED_IN".equals(reservation.getStatus())) {
+            throw new BusinessException(400, "已签到的预约无法取消");
+        }
         if ("COMPLETED".equals(reservation.getStatus())) {
             throw new BusinessException(400, "预约已完成，无法取消");
         }
@@ -286,6 +289,7 @@ public class ReservationService {
     private ReservationResponse toReservationResponse(Reservation r, Seat seat, Room room) {
         return ReservationResponse.builder()
                 .id(r.getId())
+                .userId(r.getUserId())
                 .seatId(r.getSeatId())
                 .roomName(room != null ? room.getName() : null)
                 .seatNumber(seat != null ? seat.getSeatNumber() : null)

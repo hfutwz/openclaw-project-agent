@@ -22,9 +22,9 @@ public class SeatSearchController {
     @GetMapping("/search")
     public Result<List<SeatResponse>> search(
             @RequestParam(required = false) Long roomId,
-            @RequestParam String date,
-            @RequestParam String startTime,
-            @RequestParam String endTime,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
             @RequestParam(required = false) String socketType,
             @RequestParam(required = false) String position,
             @RequestParam(required = false) Long departmentId) {

@@ -23,6 +23,7 @@
 /home/node/.openclaw/workspace-software/openclaw-project-agent/code-agent/backend/src/main/java/com/seatflow/controller/AdminRoleController.java
 /home/node/.openclaw/workspace-software/openclaw-project-agent/code-agent/backend/src/main/java/com/seatflow/controller/AdminRoomController.java
 /home/node/.openclaw/workspace-software/openclaw-project-agent/code-agent/backend/src/main/java/com/seatflow/controller/AdminSeatController.java
+/home/node/.openclaw/workspace-software/openclaw-project-agent/code-agent/backend/src/main/java/com/seatflow/controller/AdminSeatManageController.java
 /home/node/.openclaw/workspace-software/openclaw-project-agent/code-agent/backend/src/main/java/com/seatflow/controller/AdminUserController.java
 /home/node/.openclaw/workspace-software/openclaw-project-agent/code-agent/backend/src/main/java/com/seatflow/controller/AssistantController.java
 /home/node/.openclaw/workspace-software/openclaw-project-agent/code-agent/backend/src/main/java/com/seatflow/controller/AuthController.java

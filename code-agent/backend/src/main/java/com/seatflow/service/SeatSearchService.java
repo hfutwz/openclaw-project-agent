@@ -31,9 +31,10 @@ public class SeatSearchService {
 
     public List<SeatResponse> search(Long roomId, String dateStr, String startTimeStr, String endTimeStr,
                                       String socketType, String position, Long departmentId) {
-        LocalDate date = LocalDate.parse(dateStr);
-        LocalTime startTime = LocalTime.parse(startTimeStr);
-        LocalTime endTime = LocalTime.parse(endTimeStr);
+        // 日期时间参数为可选，不传时不做时段冲突过滤
+        LocalDate date = (dateStr != null && !dateStr.isEmpty()) ? LocalDate.parse(dateStr) : null;
+        LocalTime startTime = (startTimeStr != null && !startTimeStr.isEmpty()) ? LocalTime.parse(startTimeStr) : null;
+        LocalTime endTime = (endTimeStr != null && !endTimeStr.isEmpty()) ? LocalTime.parse(endTimeStr) : null;
 
         // 1. Filter rooms by department if specified
         LambdaQueryWrapper<Room> roomWrapper = new LambdaQueryWrapper<>();
@@ -81,15 +82,23 @@ public class SeatSearchService {
 
         List<Seat> seats = seatMapper.selectList(seatWrapper);
 
-        // 3. Filter out seats that are already reserved in the time range
-        LambdaQueryWrapper<Reservation> resWrapper = new LambdaQueryWrapper<>();
-        resWrapper.eq(Reservation::getDate, date)
-                .in(Reservation::getStatus, List.of("PENDING", "CHECKED_IN"))
-                .lt(Reservation::getStartTime, endTime)
-                .gt(Reservation::getEndTime, startTime);
-        List<Long> reservedSeatIds = reservationMapper.selectList(resWrapper).stream()
-                .map(Reservation::getSeatId)
-                .collect(Collectors.toList());
+        // 3. Filter out seats that are already reserved in the time range (仅在时间参数完整时过滤)
+        final List<Long> reservedSeatIds;
+        if (date != null && startTime != null && endTime != null) {
+            final LocalDate finalDate = date;
+            final LocalTime finalStartTime = startTime;
+            final LocalTime finalEndTime = endTime;
+            LambdaQueryWrapper<Reservation> resWrapper = new LambdaQueryWrapper<>();
+            resWrapper.eq(Reservation::getDate, finalDate)
+                    .in(Reservation::getStatus, List.of("PENDING", "CHECKED_IN"))
+                    .lt(Reservation::getStartTime, finalEndTime)
+                    .gt(Reservation::getEndTime, finalStartTime);
+            reservedSeatIds = reservationMapper.selectList(resWrapper).stream()
+                    .map(Reservation::getSeatId)
+                    .collect(Collectors.toList());
+        } else {
+            reservedSeatIds = List.of();
+        }
 
         // 4. Build room id -> name map
         java.util.Map<Long, String> roomNameMap = rooms.stream()

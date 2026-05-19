@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReservationResponse {
     private Long id;
+    private Long userId;
     private Long seatId;
     private String roomName;
     private String seatNumber;

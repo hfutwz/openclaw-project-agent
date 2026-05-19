@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/admin/dashboard")
+@RequestMapping("/api/admin/statistics/dashboard")
 @RequiredArgsConstructor
 public class AdminDashboardController {
 

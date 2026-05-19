@@ -105,6 +105,38 @@ public class UserManageService {
         userMapper.deleteById(id);
     }
 
+    /**
+     * A-RBAC06: 分配用户角色（先清空再重新分配）
+     */
+    @Transactional
+    public void assignRoles(Long userId, List<Long> roleIds) {
+        User user = userMapper.selectById(userId);
+        if (user == null) throw new BusinessException(404, "用户不存在");
+        // 清空现有角色
+        LambdaQueryWrapper<UserRole> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(UserRole::getUserId, userId);
+        userRoleMapper.delete(deleteWrapper);
+        // 重新分配
+        if (roleIds != null) {
+            for (Long roleId : roleIds) {
+                UserRole ur = new UserRole();
+                ur.setUserId(userId);
+                ur.setRoleId(roleId);
+                userRoleMapper.insert(ur);
+            }
+        }
+    }
+
+    /**
+     * 获取用户角色ID列表
+     */
+    public List<Long> getRoleIds(Long userId) {
+        LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserRole::getUserId, userId);
+        return userRoleMapper.selectList(wrapper).stream()
+                .map(UserRole::getRoleId).collect(Collectors.toList());
+    }
+
     private UserResponse toUserResponse(User user) {
         List<Role> roles = roleMapper.selectByUserId(user.getId());
         List<Permission> permissions = permissionMapper.selectByUserId(user.getId());

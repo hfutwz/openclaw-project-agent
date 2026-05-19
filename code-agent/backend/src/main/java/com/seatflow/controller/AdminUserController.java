@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
@@ -45,5 +47,22 @@ public class AdminUserController {
     public Result<Void> delete(@PathVariable Long id) {
         userManageService.delete(id);
         return Result.ok();
+    }
+
+    /**
+     * A-RBAC06: 分配用户角色
+     */
+    @PutMapping("/{id}/roles")
+    public Result<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
+        userManageService.assignRoles(id, roleIds);
+        return Result.ok();
+    }
+
+    /**
+     * A-RBAC06: 查看用户当前角色
+     */
+    @GetMapping("/{id}/roles")
+    public Result<List<Long>> getRoles(@PathVariable Long id) {
+        return Result.ok(userManageService.getRoleIds(id));
     }
 }

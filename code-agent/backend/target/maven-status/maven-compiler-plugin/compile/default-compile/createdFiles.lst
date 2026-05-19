@@ -34,6 +34,7 @@ com/seatflow/mapper/PermissionMapper.class
 com/seatflow/service/SeatSearchService.class
 com/seatflow/service/impl/AuthServiceImpl.class
 com/seatflow/service/assistant/LlmModels$FunctionDef$FunctionDefBuilder.class
+com/seatflow/controller/AdminSeatManageController.class
 com/seatflow/dto/request/SeatCreateRequest.class
 com/seatflow/service/RoleManageService.class
 com/seatflow/service/DashboardService.class
