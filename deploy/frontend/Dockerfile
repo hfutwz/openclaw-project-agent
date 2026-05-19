@@ -7,9 +7,9 @@ WORKDIR /app
 # 复制依赖文件（利用 Docker 层缓存）
 COPY code-agent/frontend/package.json code-agent/frontend/pnpm-lock.yaml* ./
 
-# 安装 pnpm 并安装依赖
-RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm install --config.onlyBuiltDependencies=esbuild || pnpm install --config.onlyBuiltDependencies=esbuild
+# 安装 pnpm 并安装依赖（pnpm 9 稳定，避免 v11 构建脚本限制）
+RUN corepack enable && corepack prepare pnpm@9 --activate
+RUN pnpm install --frozen-lockfile || pnpm install
 
 # 复制源码并构建
 COPY code-agent/frontend ./
