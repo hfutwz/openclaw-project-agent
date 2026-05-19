@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -18,7 +18,6 @@ export const useAuth = () => {
     const saved = localStorage.getItem('userInfo');
     return saved ? JSON.parse(saved) : null;
   });
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // 登录
@@ -54,14 +53,11 @@ export const useAuth = () => {
   const isAdmin = (): boolean => userInfo?.userType === 'ADMIN';
   const isStudent = (): boolean => userInfo?.userType === 'STUDENT';
 
-  useEffect(() => {
-    // MVP 阶段无需初始化 token
-  }, []);
+  // MVP 阶段无需初始化
 
   return {
     user: userInfo,
     userInfo,
-    loading,
     login,
     logout,
     isLoggedIn,

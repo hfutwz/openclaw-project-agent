@@ -1,6 +1,5 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Spin } from 'antd'
 import { useAuth } from './hooks/useAuth'
 
 // Layouts
@@ -50,10 +49,8 @@ import Search from './pages/student/Search'
 
 // 路由守卫：需要登录
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { loading, isLoggedIn } = useAuth()
-  if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Spin size="large" /></div>
-  }
+  const { isLoggedIn } = useAuth()
+  // [SECURITY-DISABLED] MVP 阶段移除 loading 状态
   if (!isLoggedIn()) {
     return <Navigate to="/login" replace />
   }
