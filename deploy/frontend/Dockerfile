@@ -11,8 +11,12 @@ COPY code-agent/frontend/package.json code-agent/frontend/pnpm-lock.yaml* ./
 RUN corepack enable && corepack prepare pnpm@9 --activate
 RUN pnpm install --frozen-lockfile || pnpm install
 
-# 复制源码并构建
-COPY code-agent/frontend ./
+# 复制源码并构建（排除无效的 pnpm-workspace.yaml）
+COPY code-agent/frontend/src ./src
+COPY code-agent/frontend/index.html ./
+COPY code-agent/frontend/tsconfig*.json ./
+COPY code-agent/frontend/vite.config.ts ./
+COPY code-agent/frontend/.npmrc ./
 RUN pnpm build
 
 # 运行阶段 — Nginx 提供静态文件 + 反向代理 API
