@@ -164,105 +164,186 @@ CREATE TABLE IF NOT EXISTS t_system_config (
 
 -- ========== 初始数据 ==========
 
--- SeatFlow Seed Data
--- Password: admin123 (BCrypt hash)
--- NOTE: Run this after schema.sql
+-- ========== 初始数据 ==========
+-- 版本：v2.0（对齐 data.sql，含完整示例数据）
 
--- Departments
-INSERT INTO t_department (id, name) VALUES (1, '计算机学院');
-INSERT INTO t_department (id, name) VALUES (2, '电子工程学院');
+-- 1. 院系（6个）
+INSERT IGNORE INTO t_department (name) VALUES
+('计算机科学与工程学院'),
+('电子信息工程学院'),
+('机械与汽车工程学院'),
+('经济管理学院'),
+('理学院'),
+('人文与社会科学学院');
 
--- Users (password = admin123 / student123, BCrypt hash)
-INSERT INTO t_user (id, username, password, real_name, email, department_id, user_type) VALUES
-(1, 'admin', '$2a$10$XiJZwcfX1LTFisLwC3LtD.vu9Q745J1dgom5nkR8CR3RQsKbUEUFK', '系统管理员', 'admin@seatflow.edu', NULL, 'ADMIN'),
-(2, 'student1', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '张三', 'zhangsan@seatflow.edu', 1, 'STUDENT'),
-(3, 'student2', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '李四', 'lisi@seatflow.edu', 2, 'STUDENT');
-
--- Roles
-INSERT INTO t_role (id, name, code, description) VALUES
-(1, '超级管理员', 'super_admin', '拥有全部权限'),
-(2, '自习室管理员', 'room_admin', '管理自习室和座位'),
-(3, '服务管理员', 'service_admin', '查看预约/违约记录，代客预约'),
-(4, '只读用户', 'viewer', '仅查看预约/违约记录');
-
--- Permissions
-INSERT INTO t_permission (id, name, code) VALUES
-(1, '查看预约记录', 'reservation:view'),
-(2, '查看违约记录', 'violation:view'),
-(3, '代客预约和取消', 'reservation:manage'),
-(4, '座位登记和注销', 'seat:manage'),
-(5, '自习室登记和注销', 'room:manage'),
-(6, '调整系统参数', 'system:config'),
-(7, '角色和权限管理', 'role:manage'),
-(8, '用户角色分配', 'user:manage');
-
--- Role-Permission mapping
--- super_admin: all permissions
-INSERT INTO t_role_permission (role_id, permission_id) VALUES
-(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8);
--- room_admin: reservation:view, violation:view, seat:manage, room:manage
-INSERT INTO t_role_permission (role_id, permission_id) VALUES
-(2,1),(2,2),(2,4),(2,5);
--- service_admin: reservation:view, violation:view, reservation:manage
-INSERT INTO t_role_permission (role_id, permission_id) VALUES
-(3,1),(3,2),(3,3);
--- viewer: reservation:view, violation:view
-INSERT INTO t_role_permission (role_id, permission_id) VALUES
-(4,1),(4,2);
-
--- User-Role mapping
--- admin -> super_admin
-INSERT INTO t_user_role (user_id, role_id) VALUES (1, 1);
-
--- System config
-INSERT INTO t_system_config (config_key, config_value, description) VALUES
+-- 2. 系统参数
+INSERT IGNORE INTO t_system_config (config_key, config_value, description) VALUES
 ('max_reservation_hours', '4', '单次最大预约小时数'),
 ('check_in_remind_before_min', '15', '签到提前提醒（分钟）'),
 ('check_in_warn_after_min', '10', '签到逾期警告（分钟）'),
 ('check_in_cancel_after_min', '15', '签到逾期取消（分钟）');
 
--- Rooms
-INSERT INTO t_room (id, name, location, department_id, open_time, close_time, status) VALUES
-(1, '图书馆301', '图书馆3楼东侧', NULL, '07:00:00', '22:00:00', 'OPEN'),
-(2, '计算机学院机房', '计算机楼B201', 1, '08:00:00', '21:00:00', 'OPEN');
+-- 3. 权限
+INSERT IGNORE INTO t_permission (name, code) VALUES
+('查看预约记录', 'reservation:view'),
+('查看违约记录', 'violation:view'),
+('为用户预约和取消预约', 'reservation:manage'),
+('座位登记和注销', 'seat:manage'),
+('自习室登记和注销', 'room:manage'),
+('调整系统参数', 'system:config'),
+('角色和权限管理', 'role:manage'),
+('用户角色分配', 'user:manage');
 
--- Seats for Room 1 (图书馆301) - 4x5 grid
-INSERT INTO t_seat (room_id, seat_number, row_num, col_num, socket_type, position, status) VALUES
-(1, 'A1', 1, 1, 'NONE', 'WINDOW', 'AVAILABLE'),
-(1, 'A2', 1, 2, 'NONE', 'MIDDLE', 'AVAILABLE'),
-(1, 'A3', 1, 3, 'FIXED', 'MIDDLE', 'AVAILABLE'),
-(1, 'A4', 1, 4, 'FIXED', 'MIDDLE', 'AVAILABLE'),
-(1, 'A5', 1, 5, 'NONE', 'CORRIDOR', 'AVAILABLE'),
-(1, 'B1', 2, 1, 'NONE', 'WINDOW', 'AVAILABLE'),
-(1, 'B2', 2, 2, 'TRACK', 'MIDDLE', 'AVAILABLE'),
-(1, 'B3', 2, 3, 'TRACK', 'MIDDLE', 'AVAILABLE'),
-(1, 'B4', 2, 4, 'NONE', 'MIDDLE', 'AVAILABLE'),
-(1, 'B5', 2, 5, 'NONE', 'CORRIDOR', 'AVAILABLE'),
-(1, 'C1', 3, 1, 'FIXED', 'WINDOW', 'AVAILABLE'),
-(1, 'C2', 3, 2, 'NONE', 'MIDDLE', 'AVAILABLE'),
-(1, 'C3', 3, 3, 'NONE', 'MIDDLE', 'DISABLED'),
-(1, 'C4', 3, 4, 'TRACK', 'MIDDLE', 'AVAILABLE'),
-(1, 'C5', 3, 5, 'FIXED', 'CORRIDOR', 'AVAILABLE'),
-(1, 'D1', 4, 1, 'NONE', 'WINDOW', 'AVAILABLE'),
-(1, 'D2', 4, 2, 'FIXED', 'MIDDLE', 'AVAILABLE'),
-(1, 'D3', 4, 3, 'NONE', 'MIDDLE', 'AVAILABLE'),
-(1, 'D4', 4, 4, 'NONE', 'MIDDLE', 'AVAILABLE'),
-(1, 'D5', 4, 5, 'NONE', 'CORRIDOR', 'AVAILABLE');
+-- 4. 角色
+INSERT IGNORE INTO t_role (name, code, description) VALUES
+('超级管理员', 'super_admin', '拥有所有权限，系统最高管理者'),
+('自习室管理员', 'room_admin', '管理自习室和座位，查看预约记录'),
+('服务管理员', 'service_admin', '查看预约和违约记录，代客预约/取消'),
+('查看员', 'viewer', '仅查看预约和违约记录');
 
--- Seats for Room 2 (计算机学院机房) - 3x4 grid
-INSERT INTO t_seat (room_id, seat_number, row_num, col_num, socket_type, position, status) VALUES
-(2, 'A1', 1, 1, 'FIXED', 'WINDOW', 'AVAILABLE'),
-(2, 'A2', 1, 2, 'FIXED', 'MIDDLE', 'AVAILABLE'),
-(2, 'A3', 1, 3, 'FIXED', 'MIDDLE', 'AVAILABLE'),
-(2, 'A4', 1, 4, 'FIXED', 'CORRIDOR', 'AVAILABLE'),
-(2, 'B1', 2, 1, 'TRACK', 'WINDOW', 'AVAILABLE'),
-(2, 'B2', 2, 2, 'TRACK', 'MIDDLE', 'AVAILABLE'),
-(2, 'B3', 2, 3, 'TRACK', 'MIDDLE', 'AVAILABLE'),
-(2, 'B4', 2, 4, 'TRACK', 'CORRIDOR', 'AVAILABLE'),
-(2, 'C1', 3, 1, 'FIXED', 'WINDOW', 'AVAILABLE'),
-(2, 'C2', 3, 2, 'FIXED', 'MIDDLE', 'AVAILABLE'),
-(2, 'C3', 3, 3, 'FIXED', 'MIDDLE', 'AVAILABLE'),
-(2, 'C4', 3, 4, 'FIXED', 'CORRIDOR', 'AVAILABLE');
+-- 5. 角色-权限映射（通过 code 关联，避免依赖自增 id）
+-- super_admin: 所有权限
+INSERT IGNORE INTO t_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM t_role r, t_permission p WHERE r.code = 'super_admin';
 
--- 补充 created_by 字段
+-- room_admin: 自习室/座位管理 + 查看预约/违约
+INSERT IGNORE INTO t_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM t_role r, t_permission p
+WHERE r.code = 'room_admin' AND p.code IN ('room:manage', 'seat:manage', 'reservation:view', 'violation:view');
+
+-- service_admin: 查看预约/违约 + 代客预约
+INSERT IGNORE INTO t_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM t_role r, t_permission p
+WHERE r.code = 'service_admin' AND p.code IN ('reservation:view', 'violation:view', 'reservation:manage');
+
+-- viewer: 仅查看预约/违约
+INSERT IGNORE INTO t_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM t_role r, t_permission p
+WHERE r.code = 'viewer' AND p.code IN ('reservation:view', 'violation:view');
+
+-- 6. 用户（admin/admin123，student1~2/student123）
+INSERT IGNORE INTO t_user (username, password, real_name, email, department_id, user_type) VALUES
+('admin', '$2a$10$XiJZwcfX1LTFisLwC3LtD.vu9Q745J1dgom5nkR8CR3RQsKbUEUFK', '系统管理员', 'admin@seatflow.edu', NULL, 'ADMIN'),
+('student1', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '张三', 'zhangsan@seatflow.edu', 1, 'STUDENT'),
+('student2', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '李四', 'lisi@seatflow.edu', 2, 'STUDENT');
+
+-- 7. 用户-角色映射
+INSERT IGNORE INTO t_user_role (user_id, role_id)
+SELECT u.id, r.id FROM t_user u, t_role r WHERE u.username = 'admin' AND r.code = 'super_admin';
+
+-- 8. 自习室（4个）
+INSERT IGNORE INTO t_room (name, location, department_id, open_time, close_time, status) VALUES
+('图书馆301', '图书馆三楼东侧', NULL, '07:00:00', '22:00:00', 'OPEN'),
+('图书馆302', '图书馆三楼西侧', NULL, '07:00:00', '22:00:00', 'OPEN'),
+('计算机学院实验室', '计算机学院楼301', 1, '08:00:00', '21:00:00', 'OPEN'),
+('电子学院自习室', '电子学院楼201', 2, '08:00:00', '21:00:00', 'OPEN');
+
+-- 9. 座位（图书馆301 - 5行6列 = 30座）
+INSERT IGNORE INTO t_seat (room_id, seat_number, row_num, col_num, socket_type, position, status)
+SELECT r.id, s.seat_number, s.row_num, s.col_num, s.socket_type, s.position, s.status
+FROM t_room r,
+(SELECT 'A01' seat_number, 1 row_num, 1 col_num, 'FIXED'  socket_type, 'WINDOW'   position, 'AVAILABLE' status UNION ALL
+ SELECT 'A02', 1, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A03', 1, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A04', 1, 4, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A05', 1, 5, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A06', 1, 6, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'B01', 2, 1, 'FIXED', 'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'B02', 2, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B03', 2, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B04', 2, 4, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B05', 2, 5, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B06', 2, 6, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'C01', 3, 1, 'FIXED', 'WINDOW',   'DISABLED'  UNION ALL
+ SELECT 'C02', 3, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C03', 3, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C04', 3, 4, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C05', 3, 5, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C06', 3, 6, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'D01', 4, 1, 'FIXED', 'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'D02', 4, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'D03', 4, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'D04', 4, 4, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'D05', 4, 5, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'D06', 4, 6, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'E01', 5, 1, 'FIXED', 'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'E02', 5, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'E03', 5, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'E04', 5, 4, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'E05', 5, 5, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'E06', 5, 6, 'NONE',  'CORRIDOR', 'AVAILABLE') s
+WHERE r.name = '图书馆301';
+
+-- 座位（图书馆302 - 4行5列 = 20座）
+INSERT IGNORE INTO t_seat (room_id, seat_number, row_num, col_num, socket_type, position, status)
+SELECT r.id, s.seat_number, s.row_num, s.col_num, s.socket_type, s.position, s.status
+FROM t_room r,
+(SELECT 'A01' seat_number, 1 row_num, 1 col_num, 'NONE'  socket_type, 'WINDOW'   position, 'AVAILABLE' status UNION ALL
+ SELECT 'A02', 1, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A03', 1, 3, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A04', 1, 4, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A05', 1, 5, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'B01', 2, 1, 'NONE',  'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'B02', 2, 2, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B03', 2, 3, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B04', 2, 4, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B05', 2, 5, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'C01', 3, 1, 'FIXED', 'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'C02', 3, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C03', 3, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C04', 3, 4, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C05', 3, 5, 'FIXED', 'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'D01', 4, 1, 'NONE',  'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'D02', 4, 2, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'D03', 4, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'D04', 4, 4, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'D05', 4, 5, 'NONE',  'CORRIDOR', 'AVAILABLE')) s
+WHERE r.name = '图书馆302';
+
+-- 座位（计算机学院实验室 - 3行4列 = 12座）
+INSERT IGNORE INTO t_seat (room_id, seat_number, row_num, col_num, socket_type, position, status)
+SELECT r.id, s.seat_number, s.row_num, s.col_num, s.socket_type, s.position, s.status
+FROM t_room r,
+(SELECT 'A01' seat_number, 1 row_num, 1 col_num, 'FIXED' socket_type, 'WINDOW'   position, 'AVAILABLE' status UNION ALL
+ SELECT 'A02', 1, 2, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A03', 1, 3, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A04', 1, 4, 'FIXED', 'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'B01', 2, 1, 'TRACK', 'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'B02', 2, 2, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B03', 2, 3, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B04', 2, 4, 'TRACK', 'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'C01', 3, 1, 'FIXED', 'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'C02', 3, 2, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C03', 3, 3, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C04', 3, 4, 'FIXED', 'CORRIDOR', 'AVAILABLE')) s
+WHERE r.name = '计算机学院实验室';
+
+-- 座位（电子学院自习室 - 3行4列 = 12座）
+INSERT IGNORE INTO t_seat (room_id, seat_number, row_num, col_num, socket_type, position, status)
+SELECT r.id, s.seat_number, s.row_num, s.col_num, s.socket_type, s.position, s.status
+FROM t_room r,
+(SELECT 'A01' seat_number, 1 row_num, 1 col_num, 'NONE'  socket_type, 'WINDOW'   position, 'AVAILABLE' status UNION ALL
+ SELECT 'A02', 1, 2, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A03', 1, 3, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'A04', 1, 4, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'B01', 2, 1, 'NONE',  'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'B02', 2, 2, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B03', 2, 3, 'FIXED', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'B04', 2, 4, 'NONE',  'CORRIDOR', 'AVAILABLE' UNION ALL
+ SELECT 'C01', 3, 1, 'NONE',  'WINDOW',   'AVAILABLE' UNION ALL
+ SELECT 'C02', 3, 2, 'TRACK', 'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C03', 3, 3, 'NONE',  'MIDDLE',   'AVAILABLE' UNION ALL
+ SELECT 'C04', 3, 4, 'NONE',  'CORRIDOR', 'AVAILABLE')) s
+WHERE r.name = '电子学院自习室';
+
+-- 10. 今日签到编码
+INSERT IGNORE INTO t_check_in_code (room_id, code_date, code)
+SELECT r.id, CURDATE(), codes.code
+FROM t_room r
+JOIN (SELECT '图书馆301' rname, 'A1B2C3' code UNION ALL
+      SELECT '图书馆302', 'D4E5F6' UNION ALL
+      SELECT '计算机学院实验室', 'G7H8I9' UNION ALL
+      SELECT '电子学院自习室', 'J0K1L2') codes ON r.name = codes.rname;
+
+-- 补充 created_by 字段（幂等）
 ALTER TABLE t_reservation ADD COLUMN IF NOT EXISTS created_by VARCHAR(20) DEFAULT 'STUDENT' COMMENT '创建者: STUDENT/ADMIN';
