@@ -1,19 +1,18 @@
 # ======================
 # SeatFlow Backend Dockerfile
 # ======================
-# 需要先在本机编译：cd code-agent/backend && mvn package -DskipTests
-# 或者使用多阶段构建（需要完整源码）
-# ======================
-
-# 多阶段构建 — 先编译再打包
-FROM eclipse-temurin:21-jdk AS builder
+FROM maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /build
+
+# 复制 pom.xml 并下载依赖（利用 Docker 层缓存）
 COPY code-agent/backend/pom.xml .
-RUN mvn dependency:go-offline -B || true
+RUN mvn dependency:go-offline -B
+
+# 复制源码并打包
 COPY code-agent/backend/src ./src
 RUN mvn package -DskipTests -q
 
-# 运行阶段
+# 运行阶段 — 使用轻量 JRE 镜像
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=builder /build/target/seatflow-api-*.jar app.jar

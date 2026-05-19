@@ -1,22 +1,18 @@
 # ======================
 # SeatFlow Frontend Dockerfile
 # ======================
-
-# 构建阶段
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
-# 先复制依赖文件
+# 复制依赖文件（利用 Docker 层缓存）
 COPY code-agent/frontend/package.json code-agent/frontend/pnpm-lock.yaml* ./
 
-# 用 pnpm 安装（npm 在内部 registry 有问题）
+# 安装 pnpm 并安装依赖
 RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile || pnpm install --registry=https://registry.npmmirror.com
+RUN pnpm install --frozen-lockfile || pnpm install
 
-# 复制源码
+# 复制源码并构建
 COPY code-agent/frontend ./
-
-# 构建
 RUN pnpm build
 
 # 运行阶段 — Nginx 提供静态文件 + 反向代理 API
