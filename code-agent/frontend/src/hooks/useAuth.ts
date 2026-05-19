@@ -21,24 +21,23 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // 获取当前用户信息（从后端同步）
-  // 注意：api.ts 拦截器已返回 response.data，所以 res 本身就是 { code, message, data }
+  // [SECURITY-DISABLED] 改为通过 username 参数获取用户信息
   const fetchUserInfo = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const username = localStorage.getItem('loginUsername');
+    if (!username) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const res = await api.get('/auth/me') as any;
+      const res = await api.get(`/auth/me?username=${username}`) as any;
       if (res.code === 200) {
         const info = res.data as UserInfo;
         setUserInfo(info);
         localStorage.setItem('userInfo', JSON.stringify(info));
       }
     } catch {
-      localStorage.removeItem('token');
+      localStorage.removeItem('loginUsername');
       localStorage.removeItem('userInfo');
       setUserInfo(null);
     } finally {
@@ -51,8 +50,8 @@ export const useAuth = () => {
     try {
       const res = await api.post('/auth/login', { username, password }) as any;
       if (res.code === 200) {
-        const { token } = res.data as { token: string; expiresIn: number };
-        localStorage.setItem('token', token);
+        // [SECURITY-DISABLED] 不再存 token，只存 username
+        localStorage.setItem('loginUsername', username);
         await fetchUserInfo();
         return { success: true };
       }
@@ -67,19 +66,20 @@ export const useAuth = () => {
 
   // 登出
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('loginUsername');
     localStorage.removeItem('userInfo');
     setUserInfo(null);
     navigate('/login');
   };
 
-  const isLoggedIn = (): boolean => !!localStorage.getItem('token');
+  // [SECURITY-DISABLED] 改为检查 userInfo 而非 token
+  const isLoggedIn = (): boolean => !!localStorage.getItem('loginUsername');
   const isAdmin = (): boolean => userInfo?.userType === 'ADMIN';
   const isStudent = (): boolean => userInfo?.userType === 'STUDENT';
 
   // 初始化时同步用户信息
   useEffect(() => {
-    if (localStorage.getItem('token') && !userInfo) {
+    if (localStorage.getItem('loginUsername') && !userInfo) {
       fetchUserInfo();
     }
   }, []);

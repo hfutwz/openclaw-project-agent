@@ -27,10 +27,16 @@ public class AuthController {
 
     /**
      * GET /api/auth/me — 获取当前登录用户信息
+     * [SECURITY-DISABLED] 改为传 username 参数（原从 SecurityContext 获取）
      */
     @GetMapping("/me")
-    public Result<UserInfoResponse> getCurrentUser() {
-        UserInfoResponse userInfo = authService.getCurrentUserInfo();
-        return Result.ok(userInfo);
+    public Result<UserInfoResponse> getCurrentUser(
+            @RequestParam(value = "username", required = false) String username) {
+        // [SECURITY-DISABLED] 如果有 username 参数，按用户名查询；否则返回空
+        if (username != null && !username.isBlank()) {
+            UserInfoResponse userInfo = authService.getUserByUsername(username);
+            return Result.ok(userInfo);
+        }
+        return Result.fail(400, "请提供 username 参数");
     }
 }

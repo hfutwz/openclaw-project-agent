@@ -20,4 +20,9 @@ public interface AuthService {
      * 根据用户 ID 获取用户信息（测试/Service 层调用）
      */
     UserInfoResponse getCurrentUser(Long userId);
+
+    /**
+     * [SECURITY-DISABLED] 根据用户名获取用户信息
+     */
+    UserInfoResponse getUserByUsername(String username);
 }

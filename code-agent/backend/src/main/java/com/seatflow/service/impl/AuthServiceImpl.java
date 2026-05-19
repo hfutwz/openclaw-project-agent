@@ -46,24 +46,26 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(401, "密码错误");
         }
 
-        List<Role> roles = roleMapper.selectByUserId(user.getId());
-        List<String> roleCodes = roles.stream()
-                .map(Role::getCode)
-                .collect(Collectors.toList());
+        // [SECURITY-DISABLED] 原 JWT 生成逻辑已注释
+        // List<Role> roles = roleMapper.selectByUserId(user.getId());
+        // List<String> roleCodes = roles.stream()
+        //         .map(Role::getCode)
+        //         .collect(Collectors.toList());
+        // String token = jwtTokenProvider.generateToken(
+        //         user.getId(),
+        //         user.getUsername(),
+        //         roleCodes
+        // );
+        // return new LoginResponse(token, jwtTokenProvider.getExpirationMs());
 
-        String token = jwtTokenProvider.generateToken(
-                user.getId(),
-                user.getUsername(),
-                roleCodes
-        );
-
-        return new LoginResponse(token, jwtTokenProvider.getExpirationMs());
+        // 仅返回空 token，前端靠 localStorage 存 userInfo 标记登录状态
+        return new LoginResponse("", 0L);
     }
 
     @Override
     public UserInfoResponse getCurrentUserInfo() {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return getCurrentUser(userId);
+        // [SECURITY-DISABLED] 原从 SecurityContext 获取，已失效
+        throw new BusinessException(400, "请使用 getUserByUsername(username)");
     }
 
     @Override
@@ -72,6 +74,34 @@ public class AuthServiceImpl implements AuthService {
 
         List<Role> roles = roleMapper.selectByUserId(userId);
         List<Permission> permissions = permissionMapper.selectByUserId(userId);
+
+        return UserInfoResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .realName(user.getRealName())
+                .email(user.getEmail())
+                .departmentId(user.getDepartmentId())
+                .userType(user.getUserType())
+                .roles(roles.stream().map(Role::getCode).collect(Collectors.toList()))
+                .permissions(permissions.stream()
+                        .map(Permission::getCode)
+                        .distinct()
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    /**
+     * [SECURITY-DISABLED] 根据用户名获取用户信息
+     */
+    public UserInfoResponse getUserByUsername(String username) {
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>()
+                        .eq(User::getUsername, username)
+                        .eq(User::getDeleted, 0)
+        );
+
+        List<Role> roles = roleMapper.selectByUserId(user.getId());
+        List<Permission> permissions = permissionMapper.selectByUserId(user.getId());
 
         return UserInfoResponse.builder()
                 .id(user.getId())
