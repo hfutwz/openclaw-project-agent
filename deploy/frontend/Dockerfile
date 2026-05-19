@@ -1,27 +1,28 @@
-# 构建阶段：用 Node.js 21 打包前端
-FROM node:21-alpine AS builder
+# ======================
+# SeatFlow Frontend Dockerfile
+# ======================
 
+# 构建阶段
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 复制依赖文件
-COPY ../../code-agent/frontend/package*.json ./
-RUN npm install
+# 先复制依赖文件
+COPY code-agent/frontend/package.json code-agent/frontend/pnpm-lock.yaml* ./
 
-# 复制源码并打包
-COPY ../../code-agent/frontend ./
-RUN npm run build
+# 用 pnpm 安装（npm 在内部 registry 有问题）
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile || pnpm install --registry=https://registry.npmmirror.com
 
-# 运行阶段：用 Nginx 提供静态资源
+# 复制源码
+COPY code-agent/frontend ./
+
+# 构建
+RUN pnpm build
+
+# 运行阶段 — Nginx 提供静态文件 + 反向代理 API
 FROM nginx:alpine
-
-# 复制打包好的dist文件
+COPY deploy/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 复制Nginx配置
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# 暴露端口
 EXPOSE 80
-
-# 启动Nginx
 CMD ["nginx", "-g", "daemon off;"]

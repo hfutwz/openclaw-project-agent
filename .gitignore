@@ -1,2 +1,7 @@
-# All files tracked - no exclusions per user request
-code-agent/backend/target/
+node_modules/
+dist/
+*.tgz
+*.log
+target/
+.DS_Store
+.env.local

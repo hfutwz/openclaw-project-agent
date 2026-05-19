@@ -1,14 +1,22 @@
-# 基础镜像：OpenJDK 21
-FROM openjdk:21-jdk-slim
+# ======================
+# SeatFlow Backend Dockerfile
+# ======================
+# 需要先在本机编译：cd code-agent/backend && mvn package -DskipTests
+# 或者使用多阶段构建（需要完整源码）
+# ======================
 
-# 工作目录
+# 多阶段构建 — 先编译再打包
+FROM eclipse-temurin:21-jdk AS builder
+WORKDIR /build
+COPY code-agent/backend/pom.xml .
+RUN mvn dependency:go-offline -B || true
+COPY code-agent/backend/src ./src
+RUN mvn package -DskipTests -q
+
+# 运行阶段
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-
-# 复制后端jar包（编译后在backend/target下）
-COPY ../../code-agent/backend/target/seatflow-api-*.jar app.jar
-
-# 暴露端口
+COPY --from=builder /build/target/seatflow-api-*.jar app.jar
 EXPOSE 8080
-
-# 启动命令
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
