@@ -48,12 +48,12 @@ import Search from './pages/student/Search'
 // Admin placeholder pages (removed, implemented in M5)
 
 // 路由守卫：需要登录
+// [SECURITY-DISABLED] MVP 测试阶段：允许直接访问所有页面，无需登录
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isLoggedIn } = useAuth()
-  // [SECURITY-DISABLED] MVP 阶段移除 loading 状态
-  if (!isLoggedIn()) {
-    return <Navigate to="/login" replace />
-  }
+  // const { isLoggedIn } = useAuth()
+  // if (!isLoggedIn()) {
+  //   return <Navigate to="/login" replace />
+  // }
   return <>{children}</>
 }
 
