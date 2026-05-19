@@ -1,5 +1,10 @@
 package com.seatflow.config;
 
+/* [SECURITY-DISABLED] CORS 配置已注释
+ * 原因：Nginx 同域代理（localhost:8001 → /api → backend:8080）
+ * 浏览器视为同源请求，不发 Origin 头，不需要后端 CORS
+ * 恢复 Security 时取消注释即可
+ *
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -23,4 +28,12 @@ public class CorsConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+}
+*/
+
+/**
+ * [SECURITY-DISABLED] 空配置类，CorsFilter 不再生效
+ */
+// @Configuration  // [SECURITY-DISABLED] 已注释
+public class CorsConfig {
 }
