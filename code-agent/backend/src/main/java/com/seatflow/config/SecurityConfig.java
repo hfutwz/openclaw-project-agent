@@ -27,18 +27,40 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * [SECURITY-DISABLED] 原 Spring Security 配置已注释
- * 当前所有请求直接放行，仅靠业务层做用户名+密码校验
- * 恢复 Security：取消上方注释，恢复原 securityFilterChain bean
+ * [SECURITY-DISABLED] MVP 阶段：禁用所有 HTTP Security 拦截，全部放行。
+ * 必须显式提供 SecurityFilterChain bean，否则 Spring Boot auto-config 会启用
+ * 默认的 formLogin + 302 重定向，导致 POST /api/auth/login 被拦截并重定向到 /login。
+ * 恢复完整 Security：参考注释中的原配置。
  */
 @Configuration
-// @EnableWebSecurity          // [SECURITY-DISABLED]
-// @EnableMethodSecurity       // [SECURITY-DISABLED] 取消注释可恢复 @PreAuthorize
+@EnableWebSecurity
 public class SecurityConfig {
+
+    /**
+     * 全放行 SecurityFilterChain：禁用 CSRF、Session、formLogin、httpBasic，
+     * 所有请求直接通过，由业务层做用户名+密码校验。
+     */
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .build();
+    }
 
     /**
      * MVP 阶段保留 PasswordEncoder bean，供 AuthService 和 UserManageService 使用

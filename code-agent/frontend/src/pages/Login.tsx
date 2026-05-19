@@ -21,7 +21,14 @@ const LoginPage: React.FC = () => {
       const result = await login(values.username, values.password)
       if (result.success) {
         message.success('登录成功')
-        navigate('/student/rooms')
+        // 根据用户类型跳转到对应首页
+        const savedInfo = localStorage.getItem('userInfo')
+        const info = savedInfo ? JSON.parse(savedInfo) : null
+        if (info?.userType === 'ADMIN') {
+          navigate('/admin/dashboard')
+        } else {
+          navigate('/student/rooms')
+        }
       } else {
         message.error(result.message || '登录失败')
         form.setFieldsValue({ password: '' })

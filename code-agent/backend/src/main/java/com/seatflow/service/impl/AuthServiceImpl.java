@@ -46,20 +46,30 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(401, "密码错误");
         }
 
-        // [SECURITY-DISABLED] 原 JWT 生成逻辑已注释
-        // List<Role> roles = roleMapper.selectByUserId(user.getId());
-        // List<String> roleCodes = roles.stream()
-        //         .map(Role::getCode)
-        //         .collect(Collectors.toList());
-        // String token = jwtTokenProvider.generateToken(
-        //         user.getId(),
-        //         user.getUsername(),
-        //         roleCodes
-        // );
-        // return new LoginResponse(token, jwtTokenProvider.getExpirationMs());
+        // [SECURITY-DISABLED] 原 JWT 生成逻辑已注释；MVP 阶段查询并返回 userInfo，
+        // 前端靠 localStorage 存 userInfo 标记登录状态
+        List<Role> roles = roleMapper.selectByUserId(user.getId());
+        List<Permission> permissions = permissionMapper.selectByUserId(user.getId());
 
-        // 仅返回空 token，前端靠 localStorage 存 userInfo 标记登录状态
-        return new LoginResponse("", 0L);
+        UserInfoResponse userInfo = UserInfoResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .realName(user.getRealName())
+                .email(user.getEmail())
+                .departmentId(user.getDepartmentId())
+                .userType(user.getUserType())
+                .roles(roles.stream().map(Role::getCode).collect(Collectors.toList()))
+                .permissions(permissions.stream()
+                        .map(Permission::getCode)
+                        .distinct()
+                        .collect(Collectors.toList()))
+                .build();
+
+        return LoginResponse.builder()
+                .token("")
+                .expiresIn(0L)
+                .userInfo(userInfo)
+                .build();
     }
 
     @Override
