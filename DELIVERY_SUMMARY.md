@@ -1,84 +1,94 @@
-# 🎉 项目交付总结
+# 项目交付总结 — SeatFlow 自习座位预约系统
 
-## 📅 最终进度：2026-05-17 00:35
+**交付日期：** 2026-06-13
+**版本：** v1.0
+**仓库：** https://github.com/hfutwz/openclaw-project-agent
+**技术栈：** Spring Boot 3 + MyBatis Plus / React 19 + Ant Design + MySQL 8 / Podman 容器部署
 
-## ✅ 全部7个里程碑开发完成
-| 里程碑 | 状态 | 核心功能 |
+---
+
+## 学生端交付清单（US-S）
+
+| 编号 | 用户故事 | 后端接口 | 前端页面 | 状态 |
+|---|---|---|---|---|
+| US-S01 | 查看所有可用自习室及开放时间 | `GET /api/rooms` | `pages/student/RoomList.tsx` | ✅ |
+| US-S02 | 查看座位图并选择座位预约 | `GET /api/rooms/{id}` `GET /api/rooms/{roomId}/seats` | `pages/student/RoomDetailPage.tsx` `components/SeatMap/SeatMap.tsx` | ✅ |
+| US-S03 | 按整点小时预约座位（最多4小时） | `POST /api/reservations` | 预约时间选择弹窗 | ✅ |
+| US-S04 | 输入教室动态编码签到 | `POST /api/reservations/check-in` | `pages/student/CheckInPage.tsx` | ✅ |
+| US-S05 | 收到预约提醒（15min前/逾期10min） | 定时任务 + WebSocket 推送 | WebSocket 通知弹窗 | ✅ |
+| US-S06 | 超时未签到自动取消并通知 | 定时任务自动取消 + Violation 记录 | 推送通知 + 状态更新 | ✅ |
+| US-S07 | 取消自己的预约（含违约边界规则） | `PUT /api/reservations/{id}/cancel` | 我的预约页取消按钮 | ✅ |
+| US-S08 | 多条件搜索座位 | `GET /api/seats/search` | `pages/student/Search.tsx` | ✅ |
+| US-S09 | 查看历史预约并再次预约 | `GET /api/reservations/history` `POST /api/reservations/{id}/rebook` | 我的预约历史 Tab | ✅ |
+| US-S10 | 查看个人违约记录 | `GET /api/violations/mine` | `pages/student/MyViolations.tsx` | ✅ |
+| US-S11 | 智能助手自然语言交互 | `POST /api/assistant/chat`（LLM function calling） | `pages/student/Assistant.tsx` | ✅ |
+
+---
+
+## 管理端交付清单（US-A）
+
+| 编号 | 用户故事 | 后端接口 | 前端页面 | 状态 |
+|---|---|---|---|---|
+| US-A01 | 登记/注销自习室 | `POST/PUT/DELETE /api/admin/rooms` | `pages/admin/RoomManage.tsx` | ✅ |
+| US-A02 | 登记/注销座位（含插座/位置标记） | `POST/PUT/DELETE /api/admin/rooms/{roomId}/seats` | `pages/admin/SeatManage.tsx` | ✅ |
+| US-A03 | 查看预约统计仪表盘 | `GET /api/admin/statistics/dashboard` | `pages/admin/Dashboard.tsx` | ✅ |
+| US-A04 | 代客预约/取消预约 | `POST /api/admin/reservations` `PUT /api/admin/reservations/{id}/cancel` | `pages/admin/ReservationManage.tsx` | ✅ |
+| US-A05 | 维护角色和权限（RBAC） | `/api/admin/roles` CRUD `PUT /api/admin/users/{id}/roles` | `pages/admin/RoleManage.tsx` `pages/admin/UserManage.tsx` | ✅ |
+| US-A06 | 调整系统参数 | `GET/PUT /api/admin/configs` | `pages/admin/SystemConfigPage.tsx` | ✅ |
+
+---
+
+## 系统能力
+
+| 能力 | 说明 | 状态 |
 |---|---|---|
-| M1 基础框架 | ✅ | 数据库设计、统一返回、异常处理、JWT鉴权、Spring Security、跨域配置、定时任务 |
-| M2 自习室+座位 | ✅ | 自习室CRUD、院系权限隔离、座位CRUD、座位状态管理、前端座位图展示 |
-| M3 预约核心 | ✅ | 预约创建、取消、冲突检测、时间限制、预约状态流转、前端预约管理 |
-| M4 签到+提醒+违约 | ✅ | 签到编码、签到功能、定时提醒、超时警告、自动取消、违约记录 |
-| M5 RBAC+管理端 | ✅ | 用户管理、角色管理、权限配置、管理端仪表盘、系统参数配置 |
-| M6 智能助手 | ✅ | 自然语言交互、意图识别、自动找座、智能预约、预约/违约查询、帮助指引 |
-| M7 联调+交付 | ✅ | 全流程端到端测试、问题修复、构建验证 |
+| JWT 认证 | 登录返回 token，所有接口携带 Bearer token 鉴权 | ✅ |
+| RBAC 权限控制 | 8种权限粒度，4种预置角色，@PreAuthorize 接口级控制 | ✅ |
+| 定时任务 | 提前15min提醒 / 逾期10min催促 / 逾期15min自动取消 / 每日生成签到码 | ✅ |
+| WebSocket 推送 | STOMP 协议，登录后连接，断线重连，在线推送 / 邮件兜底 | ✅ |
+| 座位图 | 网格布局，颜色区分状态，⚡插座/🪟靠窗/🚶走廊标记 | ✅ |
+| 智能助手 | OpenAI 兼容 API，function calling 映射系统操作 | ✅ |
+| Docker 部署 | podman-compose 三件套（mysql + backend + frontend + nginx） | ✅ |
+| 数据库初始化 | init.sql 含6院系/4自习室/74座位/今日签到码/4角色/8权限 | ✅ |
 
-## 📦 已交付功能清单
-### 学生端功能
-✅ 用户登录/退出
-✅ 自习室列表/详情查看
-✅ 座位查询/展示
-✅ 预约创建/取消
-✅ 签到功能
-✅ 我的预约列表
-✅ 违约记录查看
-✅ 智能助手聊天机器人
+---
 
-### 管理端功能
-✅ 仪表盘统计
-✅ 自习室管理
-✅ 座位管理
-✅ 预约管理/代约/取消
-✅ 签到编码生成
-✅ 违约管理
-✅ 用户管理/角色分配
-✅ 角色管理/权限配置
-✅ 系统参数配置
+## 验证结果
 
-### 系统功能
-✅ JWT身份认证
-✅ 基于角色的权限控制
-✅ 定时任务（提醒/取消/警告）
-✅ 统一异常处理
-✅ 前后端跨域支持
-✅ MySQL持久化存储
+| 验证项 | 结果 |
+|---|---|
+| 后端编译 `mvn compile` | ✅ 零错误 |
+| 前端构建 `pnpm build` | ✅ 零错误 |
+| 登录认证（RBAC 恢复） | ✅ JWT 生成/校验正常 |
+| 权限边界（admin/student/viewer） | ✅ 不同角色菜单/接口隔离正常 |
+| 代码推送 | ✅ GitHub main + 华为云 CodeHub（SSH） |
 
-## ✅ 验证情况
-🔹 后端：Java 21 + Spring Boot 3，全量编译通过
-🔹 前端：React + TypeScript + Antd，构建通过
-🔹 数据库：MySQL 8，表结构/种子数据初始化完成
-🔹 接口：全部核心API验证正常
-🔹 端到端：完整业务流程运行正常
-🔹 所有PR已合并到main分支
+---
 
-## 🚀 部署方式
-### 后端部署
+## 默认账号
+
+| 账号 | 密码 | 角色 |
+|---|---|---|
+| admin | admin123 | 超级管理员（全部权限） |
+| student1 | student123 | 学生（计算机学院） |
+| student2 | student123 | 学生（电子工程学院） |
+
+---
+
+## 启动方式
+
 ```bash
-# 编译打包
-mvn package -DskipTests
-# 运行
-java -jar target/seatflow-api-0.1.0-SNAPSHOT.jar
+# 拉取最新代码
+git pull origin main
+
+# 重建容器（首次或数据库有变更时加 -v）
+/Users/wangzheng9/Library/Python/3.9/bin/podman-compose \
+  -f deploy/docker-compose.yml down -v
+
+/Users/wangzheng9/Library/Python/3.9/bin/podman-compose \
+  -f deploy/docker-compose.yml up -d --build
+
+# 访问
+# 前端：http://localhost:8001
+# 后端：http://localhost:8081
 ```
-
-### 前端部署
-```bash
-# 构建
-npm run build
-# 将dist目录部署到Nginx等Web服务器
-```
-
-### 数据库配置
-```sql
-# 创建数据库
-CREATE DATABASE seatflow DEFAULT CHARSET utf8mb4
-# 导入初始化脚本
-mysql -u root seatflow < src/main/resources/schema.sql
-mysql -u root seatflow < src/main/resources/data.sql
-```
-
-## 🔑 默认账号
-- 管理员：admin / admin123
-- 学生1：student1 / student123
-- 学生2：student2 / student123
-
-🎉 项目全部开发完成，交付成功！
