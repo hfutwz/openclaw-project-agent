@@ -31,9 +31,10 @@
 ## 开发约束
 
 ### 分阶段原则（强约束）
-- 严格按里程碑 M1 → M2 → M3... 顺序开发
-- 每个里程碑完成后：编译通过 → 提交 PR → Review 通过 → 合并 → 才开始下一个
-- 禁止一次性写完所有代码再提交
+- **开发粒度以用户故事为单位**：US-S01 → US-S02 → ... → US-S11 → US-A01 → ... → US-A06
+- 每个 US 完成后：编译通过 → Review 通过 → Test 通过 → 合并 main → 才开始下一个
+- 禁止一个 PR 里混入多个 US 的代码
+- 禁止跳过顺序（如 US-S03 必顺序在 US-S02 合并后开始）
 
 ### 编译验证（推送前必做）
 ```bash
@@ -45,8 +46,8 @@ pnpm build
 ```
 
 ### Git 规范
-- 分支：`feature/M1`、`feature/M2`...
-- Commit：`feat(M1): 描述` / `fix(M1): 修复xxx`
+- 分支：`feature/US-S01`、`feature/US-A01`...
+- Commit：`feat(US-S01): 描述` / `fix(US-S01): 修复xxx`
 - 禁止直接写 main 分支
 
 ### 技术栈约束（SeatFlow 项目）
@@ -61,7 +62,7 @@ pnpm build
 ## 完成报告格式
 
 ```markdown
-# Code Report: Mx — [里程碑名称]
+# Code Report: US-Sxx / US-Axx — [用户故事名称]
 ## 修改文件清单
 ## 编译/构建结果（✅/❌）
 ## 关键决策（为什么选方案A而非B）
