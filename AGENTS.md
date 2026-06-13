@@ -47,6 +47,22 @@
 - **完成标志：** 全部测试通过，输出测试报告
 - **模型：** `anthropic/claude-4.6-sonnet-google`
 
+### 5. Delivery Agent（最终交付验证）
+- **身份文档：** `delivery-agent/delivery-agent.md`
+- **工作目录：** `delivery-agent/`
+- **职责：** 所有 US 合并 main 后，独立读取前后端全量代码，并行验证 US-S01~S11 + US-A01~A06 功能完整性、RBAC、智能助手、边界处理、UI/UX；输出带分项评分的最终交付报告
+- **触发时机：** 所有用户故事 PR 均合并 main 后
+- **完成标志：** 输出总体评级 ✅ 可交付，或列出 P0 问题供 Code Agent 修复
+- **模型：** `anthropic/claude-4.6-sonnet-google`
+
+### 6. UI Research Agent（前端 UI/UX 调研）
+- **身份文档：** `ui-research-agent/ui-research-agent.md`
+- **工作目录：** `ui-research-agent/`
+- **职责：** 调研开源前端项目和设计规范，聚焦座位图设计、管理员/学生端体感、AI 助手界面三个方向，结合 SeatFlow 主题输出可落地改进建议
+- **触发时机：** 用户或 Orchestrator 明确发起 UI 调研需求时（独立任务，不阻塞开发主流程）
+- **完成标志：** 输出 `ui-research-agent/ui-research-report.md`，含分优先级的落地建议
+- **模型：** `anthropic/claude-4.6-sonnet-google`
+
 ## 编排流程
 
 ```
@@ -58,15 +74,23 @@
     ├─────────────────────────────┐
     ▼                             ▼
 [2] spawn Code Agent        [3] spawn Test Agent
-    (按里程碑分阶段开发)          (基于PRD并行写测试)
-    │                             │
+    (按 US 顺序开发)                (基于 PRD 并行写测试)
+    │ (每个 US 完成后)            │
     ▼                             │
 [4] spawn Review Agent ──────────┘
-    ✅ 通过 → 合并 PR
+    ✅ 通过 → 合并 PR → 下一个 US
     ⚠️ 需修改 → Code Agent 修复 → 重审
     │
     ▼
-[5] Code + Test 全部通过 → 合并 main → 部署
+[5] 所有 US 合并 main → spawn Delivery Agent
+    ✅ 可交付 → 部署
+    ⚠️ P0 问题 → Code Agent 修复 → Delivery 重验
+    │
+    ▼
+[6] spawn UI Research Agent（独立任务，不阻塞主流程）
+    调研座位图/两端体感/AI助手界面
+    输出 ui-research-agent/ui-research-report.md
+    → Code Agent 参考实施改进
 ```
 
 ## 状态跟踪
