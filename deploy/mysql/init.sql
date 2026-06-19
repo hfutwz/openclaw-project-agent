@@ -1,6 +1,10 @@
 -- SeatFlow 数据库初始化脚本（schema + data 合并）
 -- 版本：v3.0 | 更新：2026-06-19
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET character_set_connection=utf8mb4;
+
 -- SeatFlow 数据库建表脚本
 -- 版本：v1.0
 -- 日期：2026-05-16
