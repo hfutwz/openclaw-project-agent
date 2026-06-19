@@ -57,10 +57,10 @@ INSERT IGNORE INTO `t_department` (`id`, `name`) VALUES
 (5, '外国语学院');
 
 -- ========== 6. 用户 ==========
--- admin123 -> $2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iK6roS6zM59ycVcFQ4eFZ8B5WQ1a
+-- admin123 -> $2a$10$XiJZwcfX1LTFisLwC3LtD.vu9Q745J1dgom5nkR8CR3RQsKbUEUFK
 -- student123 -> $2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G
 INSERT IGNORE INTO `t_user` (`id`, `username`, `password`, `real_name`, `email`, `department_id`, `user_type`) VALUES
-(1, 'admin',    '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iK6roS6zM59ycVcFQ4eFZ8B5WQ1a', '系统管理员', 'admin@seatflow.com',    NULL, 'ADMIN'),
+(1, 'admin',    '$2a$10$XiJZwcfX1LTFisLwC3LtD.vu9Q745J1dgom5nkR8CR3RQsKbUEUFK', '系统管理员', 'admin@seatflow.com',    NULL, 'ADMIN'),
 (2, 'student1', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '张三',     'zhangsan@seatflow.edu', 1,    'STUDENT'),
 (3, 'student2', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '李四',     'lisi@seatflow.edu',     2,    'STUDENT'),
 (4, 'student3', '$2a$10$r6lwVY8aIlDsahPHO7CC6OlU0MjkRbpK3dRwYB42czS2tAVaDD21G', '王五',     'wangwu@seatflow.edu',   3,    'STUDENT'),
