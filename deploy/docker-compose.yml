@@ -5,15 +5,18 @@
 #   前端: 8001 (http://localhost:8001)
 #   后端: 8081 (http://localhost:8081)
 #   MySQL: 3307
+#
+# 启动方式（Mac/podman）：
+#   cd deploy
+#   podman-compose up -d
+#   或：/Users/wangzheng9/Library/Python/3.9/bin/podman-compose up -d
 # ======================
-
-version: '3.8'
 
 services:
   mysql:
     image: mysql:8.0
     container_name: seatflow-mysql
-    restart: unless-stopped
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-seatflow123}
       MYSQL_DATABASE: seatflow
@@ -25,8 +28,12 @@ services:
       - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - seatflow-network
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=+08:00
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-seatflow123}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pseatflow123"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -37,15 +44,16 @@ services:
       context: ..
       dockerfile: deploy/backend/Dockerfile
     container_name: seatflow-backend
-    restart: unless-stopped
+    restart: always
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/seatflow?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_ROOT_PASSWORD:-seatflow123}
       SPRING_PROFILES_ACTIVE: prod
+      # 等待 MySQL 就绪（healthcheck 在 podman-compose 中支持有限，后端自带重试）
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: 60000
     ports:
       - "${BACKEND_PORT:-8081}:8080"
     networks:
@@ -56,7 +64,7 @@ services:
       context: ..
       dockerfile: deploy/frontend/Dockerfile
     container_name: seatflow-frontend
-    restart: unless-stopped
+    restart: always
     depends_on:
       - backend
     ports:
