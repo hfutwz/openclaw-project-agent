@@ -699,7 +699,7 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 ## 参考文献
 
-[1] Karpathy, A. (2025). *Vibe Coding: A New Paradigm for AI-Assisted Software Development*. Twitter/X thread, Feb 2025.
+[1] Karpathy, A. (2025). **Vibe Coding: A New Paradigm for AI-Assisted Software Development**. Twitter/X thread, Feb 2025.
 
 [2] 李光正. (2025). 谈谈AI编程工具的进化与Vibe Coding [博客]. Guangzheng Li's Blog. https://guangzhengli.com/blog/zh/vibe-coding-and-context-coding
 
@@ -709,11 +709,11 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 [5] Anthropic. (2025). Context Engineering Best Practices: Compaction, Structured Notes, Just-in-time Retrieval, and Multi-Agent Architecture. 知乎综述: https://zhuanlan.zhihu.com/p/2011453309895062046
 
-[6] Anthropic. (2024). *Building Effective Agents*. Anthropic Blog. 中文翻译：AI Workflow & AI Agent：架构、模式与工程建议. https://arthurchiao.art/blog/build-effective-ai-agent-zh/
+[6] Anthropic. (2024). **Building Effective Agents**. Anthropic Blog. 中文翻译：AI Workflow & AI Agent：架构、模式与工程建议. https://arthurchiao.art/blog/build-effective-ai-agent-zh/
 
 [7] 知乎专栏. (2026). 让AI和你结对编程：首篇Vibe Coding系统综述论文深度解读. https://zhuanlan.zhihu.com/p/1994594361544045237
 
-[8] Pressman, R. S., & Maxim, B. R. (2020). *Software Engineering: A Practitioner's Approach* (9th ed.). McGraw-Hill Education.
+[8] Pressman, R. S., & Maxim, B. R. (2020). **Software Engineering: A Practitioner's Approach** (9th ed.). McGraw-Hill Education.
 
 [9] Atlassian. (2024). 用户故事（含示例与模板）. https://www.atlassian.com/zh/agile/project-management/user-stories
 
@@ -725,9 +725,13 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 ---
 
-*本文基于 SeatFlow 项目真实开发过程撰写。*
-*项目代码：https://github.com/hfutwz/openclaw-project-agent*
-*华为云后端仓库：seat_booking_server | 华为云前端仓库：seat_booking_web*
+本文基于 SeatFlow 项目真实开发过程撰写。
+
+项目代码（GitHub monorepo）：https://github.com/hfutwz/openclaw-project-agent
+
+华为云后端仓库（seat_booking_server）：https://devcloud.cn-east-3.huaweicloud.com/codehub/8010864/home
+
+华为云前端仓库（seat_booking_web）：https://devcloud.cn-east-3.huaweicloud.com/codehub/8010865/home
 
 ---
 
@@ -739,109 +743,109 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **CONFLICT-001：本地 MySQL 配置各不相同**
 
-*冲突现象*：组员 A 本地 MySQL root 密码是 `root`，组员 B 是 `123456`，组员 C 没有本地 MySQL；`application.yml` 写死了一个人的配置，拉取代码后直接运行报 `Access denied`。
+**冲突现象**：组员 A 本地 MySQL root 密码是 `root`，组员 B 是 `123456`，组员 C 没有本地 MySQL；`application.yml` 写死了一个人的配置，拉取代码后直接运行报 `Access denied`。
 
-*根因*：数据库连接配置硬编码在 `application.yml`，无法适配不同本地环境。
+**根因**：数据库连接配置硬编码在 `application.yml`，无法适配不同本地环境。
 
-*解法*：统一用 Docker/Podman 部署 MySQL，密码由 `deploy/.env` 统一管理，后端 `application.yml` 通过环境变量引用：`${DB_PASSWORD:seatflow123}`。
+**解法**：统一用 Docker/Podman 部署 MySQL，密码由 `deploy/.env` 统一管理，后端 `application.yml` 通过环境变量引用：`${DB_PASSWORD:seatflow123}`。
 
-*更优解法*：用 `application-local.yml` + `.gitignore` 隔离本地配置，每人本地创建覆盖文件，不提交到 git。
+**更优解法**：用 `application-local.yml` + `.gitignore` 隔离本地配置，每人本地创建覆盖文件，不提交到 git。
 
 ---
 
 **CONFLICT-002：init.sql 数据频繁修改导致合并冲突**
 
-*冲突现象*：组员 A 扩充自习室/座位数据（data.sql v2.0→v3.0），组员 B 同时添加 RBAC 权限数据，两人修改同一文件，pull 时产生 merge conflict。
+**冲突现象**：组员 A 扩充自习室/座位数据（data.sql v2.0→v3.0），组员 B 同时添加 RBAC 权限数据，两人修改同一文件，pull 时产生 merge conflict。
 
-*根因*：`data.sql` 是单一文件，承载多个业务模块的初始数据，多人同时写入必然产生行级冲突。
+**根因**：`data.sql` 是单一文件，承载多个业务模块的初始数据，多人同时写入必然产生行级冲突。
 
-*解法*：人工合并后统一为 v2.0 版本，用 `INSERT IGNORE` 保证幂等。
+**解法**：人工合并后统一为 v2.0 版本，用 `INSERT IGNORE` 保证幂等。
 
-*更优解法*：按模块拆分 SQL 文件，MySQL 容器按字母顺序执行 `docker-entrypoint-initdb.d/` 下所有 `.sql`。
+**更优解法**：按模块拆分 SQL 文件，MySQL 容器按字母顺序执行 `docker-entrypoint-initdb.d/` 下所有 `.sql`。
 
 ---
 
 **CONFLICT-003：BCrypt 密码 Hash 不一致导致登录失败**
 
-*冲突现象*：组员 B 写 `data.sql` 时用自己生成的 BCrypt hash，注释写 `-- admin123 ->` 但实际 hash 对应密码未知，其他组员登录一律报"密码错误"。
+**冲突现象**：组员 B 写 `data.sql` 时用自己生成的 BCrypt hash，注释写 `-- admin123 ->` 但实际 hash 对应密码未知，其他组员登录一律报"密码错误"。
 
-*根因*：BCrypt hash 不可逆，注释说明与实际 hash 不对应。
+**根因**：BCrypt hash 不可逆，注释说明与实际 hash 不对应。
 
-*解法*：统一替换回项目初始验证过的 hash（`admin123` → `$2a$10$XiJZwcfX1LTFisLwC3LtD.vu9Q745J1dgom5nkR8CR3RQsKbUEUFK`）。
+**解法**：统一替换回项目初始验证过的 hash（`admin123` → `$2a$10$XiJZwcfX1LTFisLwC3LtD.vu9Q745J1dgom5nkR8CR3RQsKbUEUFK`）。
 
-*规范*：由一人统一生成所有测试账号 hash，注释写明明文，禁止个人修改。
+**规范**：由一人统一生成所有测试账号 hash，注释写明明文，禁止个人修改。
 
 ---
 
 **CONFLICT-004：代码同步时整目录覆盖，丢失已有改动**
 
-*冲突现象*：`git checkout huawei-frontend/main -- src/` 整目录覆盖，批量座位生成功能消失。
+**冲突现象**：`git checkout huawei-frontend/main -- src/` 整目录覆盖，批量座位生成功能消失。
 
-*根因*：`git checkout <remote> -- <dir>` 是破坏性操作，直接覆盖本地文件，不会合并，不会报冲突。
+**根因**：`git checkout <remote> -- <dir>` 是破坏性操作，直接覆盖本地文件，不会合并，不会报冲突。
 
-*解法*：`git show huawei-frontend/feature/...:src/pages/admin/SeatManage.tsx > code-agent/frontend/src/pages/admin/SeatManage.tsx` 从历史恢复文件。
+**解法**：`git show huawei-frontend/feature/...:src/pages/admin/SeatManage.tsx > code-agent/frontend/src/pages/admin/SeatManage.tsx` 从历史恢复文件。
 
-*规范*：同步他人代码**永远用 `git merge`，不用 `git checkout -- <dir>`**。
+**规范**：同步他人代码**永远用 `git merge`，不用 `git checkout -- <dir>`**。
 
 ---
 
 **CONFLICT-005：monorepo 路径导致文件放错位置**
 
-*冲突现象*：`git checkout huawei-backend/main -- src/` 后 `src/` 出现在 monorepo 根目录（应在 `code-agent/backend/src/`）。
+**冲突现象**：`git checkout huawei-backend/main -- src/` 后 `src/` 出现在 monorepo 根目录（应在 `code-agent/backend/src/`）。
 
-*根因*：华为云后端仓库的 `src/` 在其根目录，checkout 到 monorepo 时按原路径存放，路径错位。
+**根因**：华为云后端仓库的 `src/` 在其根目录，checkout 到 monorepo 时按原路径存放，路径错位。
 
-*解法*：用 `git show <remote>:<src> > <dst>` 指定输出路径；用 `git rm -r --cached` 清理误放文件。
+**解法**：用 `git show <remote>:<src> > <dst>` 指定输出路径；用 `git rm -r --cached` 清理误放文件。
 
 ---
 
 **CONFLICT-006：RBAC 表结构多人各自定义冲突**
 
-*冲突现象*：组员 A、B 各自定义了权限相关表，字段名不一致（`role_name` vs `name`），合并时双重定义报错。
+**冲突现象**：组员 A、B 各自定义了权限相关表，字段名不一致（`role_name` vs `name`），合并时双重定义报错。
 
-*根因*：多人分头开发，没有在开发前对表结构做统一评审。
+**根因**：多人分头开发，没有在开发前对表结构做统一评审。
 
-*解法*：以组员 B 的 RBAC 设计为准，删除组员 A 的重复表定义，用 `INSERT IGNORE + SELECT JOIN` 插入权限关联数据。
+**解法**：以组员 B 的 RBAC 设计为准，删除组员 A 的重复表定义，用 `INSERT IGNORE + SELECT JOIN` 插入权限关联数据。
 
-*更优解法*：开发前召开"表结构评审会"，每人只负责自己模块的 `data_*.sql`，不允许修改他人负责的表。
+**更优解法**：开发前召开"表结构评审会"，每人只负责自己模块的 `data_*.sql`，不允许修改他人负责的表。
 
 ---
 
 **CONFLICT-007：华为云 main 分支保护规则拒绝 force push**
 
-*冲突现象*：`git push huawei-backend <commit>:main --force` 报 `non-fast-forward` 被拒。
+**冲突现象**：`git push huawei-backend <commit>:main --force` 报 `non-fast-forward` 被拒。
 
-*根因*：华为云 CodeHub 对 main 分支设置保护规则，禁止 force push，要求通过 MR 合并。
+**根因**：华为云 CodeHub 对 main 分支设置保护规则，禁止 force push，要求通过 MR 合并。
 
-*解法*：推送到临时分支，在华为云 Web UI 创建 MR 合并到 main。
+**解法**：推送到临时分支，在华为云 Web UI 创建 MR 合并到 main。
 
 ---
 
 **CONFLICT-008：MySQL Volume 未清空，init.sql 更新不生效**
 
-*冲突现象*：更新 `init.sql` 重启容器后数据仍是旧的，前端自习室只显示4个而非6个。
+**冲突现象**：更新 `init.sql` 重启容器后数据仍是旧的，前端自习室只显示4个而非6个。
 
-*根因*：MySQL 使用 named volume 持久化数据，volume 存在时跳过 `init.sql` 执行。
+**根因**：MySQL 使用 named volume 持久化数据，volume 存在时跳过 `init.sql` 执行。
 
-*解法*：`podman-compose down -v` 删除 volume，重新 `up -d --build`。
+**解法**：`podman-compose down -v` 删除 volume，重新 `up -d --build`。
 
 ---
 
 **CONFLICT-009：前端构建工具冲突（npm vs pnpm）**
 
-*冲突现象*：部分组员用 `npm install`，内部 registry 篡改 `package.json`，`pnpm-lock.yaml` 与 `package-lock.json` 同时存在导致构建不一致。
+**冲突现象**：部分组员用 `npm install`，内部 registry 篡改 `package.json`，`pnpm-lock.yaml` 与 `package-lock.json` 同时存在导致构建不一致。
 
-*解法*：强制规定只用 pnpm，删除 `package-lock.json`，在 `package.json` 中加入 `engines` 约束。
+**解法**：强制规定只用 pnpm，删除 `package-lock.json`，在 `package.json` 中加入 `engines` 约束。
 
 ---
 
 **CONFLICT-010：unrelated histories 导致 git pull 报错**
 
-*冲突现象*：`git pull` 报 `refusing to merge unrelated histories`。
+**冲突现象**：`git pull` 报 `refusing to merge unrelated histories`。
 
-*根因*：`git subtree split` 生成的提交树与组员本地 clone 历史没有公共祖先节点。
+**根因**：`git subtree split` 生成的提交树与组员本地 clone 历史没有公共祖先节点。
 
-*解法*：`git fetch origin && git reset --hard origin/main` 强制对齐远端版本。
+**解法**：`git fetch origin && git reset --hard origin/main` 强制对齐远端版本。
 
 ---
 
@@ -868,43 +872,43 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **BUG-001：登录返回 302 重定向，无法登录** | 归因：模型上下文不够
 
-*现象*：前端点击登录，POST `/api/auth/login` 返回302，自动 GET `http://localhost/login`（无端口），连接被拒。
+**现象**：前端点击登录，POST `/api/auth/login` 返回302，自动 GET `http://localhost/login`（无端口），连接被拒。
 
-*根因*：`spring-boot-starter-security` 依赖存在时，即使注释了 `@EnableWebSecurity`，只要没有显式定义 `SecurityFilterChain` bean，Spring Boot auto-config 就会启用默认 formLogin 机制，将未认证请求302重定向到 `/login`（无端口号）。
+**根因**：`spring-boot-starter-security` 依赖存在时，即使注释了 `@EnableWebSecurity`，只要没有显式定义 `SecurityFilterChain` bean，Spring Boot auto-config 就会启用默认 formLogin 机制，将未认证请求302重定向到 `/login`（无端口号）。
 
-*解法*：恢复 `@EnableWebSecurity` + 显式定义 `SecurityFilterChain` bean，设置 `anyRequest().permitAll()`，禁用 formLogin/httpBasic/CSRF/Stateless session。
+**解法**：恢复 `@EnableWebSecurity` + 显式定义 `SecurityFilterChain` bean，设置 `anyRequest().permitAll()`，禁用 formLogin/httpBasic/CSRF/Stateless session。
 
 ---
 
 **BUG-002：登录成功但用户信息为空，前端无法判断角色** | 归因：需求描述不清楚
 
-*现象*：登录接口返回200，但 localStorage 中 userInfo 为空对象，admin 和学生界面完全相同。
+**现象**：登录接口返回200，但 localStorage 中 userInfo 为空对象，admin 和学生界面完全相同。
 
-*根因*：`AuthServiceImpl.login()` 只做了密码校验，返回 `LoginResponse("", 0L)` 空对象，未查询角色/权限。
+**根因**：`AuthServiceImpl.login()` 只做了密码校验，返回 `LoginResponse("", 0L)` 空对象，未查询角色/权限。
 
-*解法*：修改 `login()`，登录成功后查询 roles/permissions，构建 `UserInfoResponse` 作为 `LoginResponse.userInfo` 返回。
+**解法**：修改 `login()`，登录成功后查询 roles/permissions，构建 `UserInfoResponse` 作为 `LoginResponse.userInfo` 返回。
 
-*归因*：需求描述只写了"验证用户名密码"，没有明确"返回角色权限信息"，Code Agent 按最小实现来做。
+**归因**：需求描述只写了"验证用户名密码"，没有明确"返回角色权限信息"，Code Agent 按最小实现来做。
 
 ---
 
 **BUG-003：登录成功后所有用户都跳转到学生端** | 归因：需求拆解不够细
 
-*现象*：admin 登录后跳转到 `/student/rooms`，而非管理端。
+**现象**：admin 登录后跳转到 `/student/rooms`，而非管理端。
 
-*根因*：`Login.tsx` 中写死了 `navigate('/student/rooms')`，未根据用户角色动态跳转。
+**根因**：`Login.tsx` 中写死了 `navigate('/student/rooms')`，未根据用户角色动态跳转。
 
-*解法*：读取 `localStorage.userInfo.userType`，ADMIN 跳转 `/admin/dashboard`，STUDENT 跳转 `/student/rooms`。
+**解法**：读取 `localStorage.userInfo.userType`，ADMIN 跳转 `/admin/dashboard`，STUDENT 跳转 `/student/rooms`。
 
 ---
 
 **BUG-004：数据库中文乱码** | 归因：模型上下文不够
 
-*现象*：前端自习室名称显示为 `å›¾ä¹¦é¦†301` 等乱码。
+**现象**：前端自习室名称显示为 `å›¾ä¹¦é¦†301` 等乱码。
 
-*根因*：`init.sql` 头部缺少 `SET NAMES utf8mb4` 声明，MySQL 客户端连接时使用默认字符集（latin1）解析 SQL 文件。
+**根因**：`init.sql` 头部缺少 `SET NAMES utf8mb4` 声明，MySQL 客户端连接时使用默认字符集（latin1）解析 SQL 文件。
 
-*解法*：`init.sql` 文件头部加入：
+**解法**：`init.sql` 文件头部加入：
 ```sql
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
@@ -915,51 +919,51 @@ SET character_set_connection=utf8mb4;
 
 **BUG-005：Dockerfile 构建失败** | 归因：需求描述不清楚
 
-*现象*：后端 `mvn: command not found`；前端 pnpm 11 要求 Node 22+，安装依赖报版本错误。
+**现象**：后端 `mvn: command not found`；前端 pnpm 11 要求 Node 22+，安装依赖报版本错误。
 
-*根因*：Code Agent 选择了基础 JDK 镜像（无 Maven）；前端镜像版本未考虑 pnpm 版本要求。
+**根因**：Code Agent 选择了基础 JDK 镜像（无 Maven）；前端镜像版本未考虑 pnpm 版本要求。
 
-*解法*：`eclipse-temurin:21-jdk` → `maven:3.9-eclipse-temurin-21`；`node:20-alpine` → `node:22-alpine`。
+**解法**：`eclipse-temurin:21-jdk` → `maven:3.9-eclipse-temurin-21`；`node:20-alpine` → `node:22-alpine`。
 
 ---
 
 **BUG-006：前端构建验证不完整** | 归因：开发者 taste 不对
 
-*现象*：修改代码后只用 `tsc -b` 验证，推送后 Docker 构建时 `vite build` 报错。
+**现象**：修改代码后只用 `tsc -b` 验证，推送后 Docker 构建时 `vite build` 报错。
 
-*根因*：`tsc -b` 只做类型检查，`vite build` 还会做 tree-shaking、import 分析等额外检查。两者不等价。
+**根因**：`tsc -b` 只做类型检查，`vite build` 还会做 tree-shaking、import 分析等额外检查。两者不等价。
 
-*解法*：规定推送前必须执行完整的 `pnpm build`（= `tsc -b && vite build`）。
+**解法**：规定推送前必须执行完整的 `pnpm build`（= `tsc -b && vite build`）。
 
 ---
 
 **BUG-007：pnpm 安装被内部 npm registry 污染** | 归因：环境约束未传达
 
-*现象*：`npm install` 报包缺失，或 `package.json` 被篡改写入内部源地址。
+**现象**：`npm install` 报包缺失，或 `package.json` 被篡改写入内部源地址。
 
-*根因*：沙箱环境的 npm 默认指向内部 registry，该 registry 未镜像所有公共包，且安装时会修改配置文件。
+**根因**：沙箱环境的 npm 默认指向内部 registry，该 registry 未镜像所有公共包，且安装时会修改配置文件。
 
-*解法*：全部改用 pnpm + 公共源，将"前端只用 pnpm"作为强约束写入项目规范。
+**解法**：全部改用 pnpm + 公共源，将"前端只用 pnpm"作为强约束写入项目规范。
 
 ---
 
 **BUG-008：git 推送出现 "refusing to merge unrelated histories"** | 归因：技术方案副作用考虑不足
 
-*现象*：组员 `git pull` 报 `refusing to merge unrelated histories`。
+**现象**：组员 `git pull` 报 `refusing to merge unrelated histories`。
 
-*根因*：`git subtree split` 生成的提交历史是全新的，与组员通过 `git clone` 拿到的历史没有公共祖先节点。
+**根因**：`git subtree split` 生成的提交历史是全新的，与组员通过 `git clone` 拿到的历史没有公共祖先节点。
 
-*解法*：`git fetch origin && git reset --hard origin/main` 强制对齐远端。
+**解法**：`git fetch origin && git reset --hard origin/main` 强制对齐远端。
 
 ---
 
 **BUG-009：批量座位生成 UI 被组员代码覆盖** | 归因：需求描述不清楚
 
-*现象*：同步组员 B 代码后，「批量生成座位」功能消失。
+**现象**：同步组员 B 代码后，「批量生成座位」功能消失。
 
-*根因*：`git checkout huawei-frontend/main -- src/` 整目录覆盖，我已改动的 `SeatManage.tsx` 被旧版本覆盖。
+**根因**：`git checkout huawei-frontend/main -- src/` 整目录覆盖，我已改动的 `SeatManage.tsx` 被旧版本覆盖。
 
-*解法*：从自己的历史分支恢复文件：
+**解法**：从自己的历史分支恢复文件：
 ```bash
 git show huawei-frontend/feature/task_a_room_management:src/pages/admin/SeatManage.tsx \
   > code-agent/frontend/src/pages/admin/SeatManage.tsx
@@ -969,31 +973,31 @@ git show huawei-frontend/feature/task_a_room_management:src/pages/admin/SeatMana
 
 **BUG-010：MySQL Volume 未清空导致 init.sql 不生效** | 归因：开发者 taste 不对
 
-*现象*：更新了 `init.sql`，重启 podman 后前端仍显示旧数据，自习室只有4个而非6个。
+**现象**：更新了 `init.sql`，重启 podman 后前端仍显示旧数据，自习室只有4个而非6个。
 
-*根因*：MySQL 容器使用 named volume 持久化数据。volume 已存在时 MySQL 直接跳过 `init.sql`，使用已有数据。
+**根因**：MySQL 容器使用 named volume 持久化数据。volume 已存在时 MySQL 直接跳过 `init.sql`，使用已有数据。
 
-*解法*：`podman-compose down -v` 删除 volume，再重新 `up -d --build`。
+**解法**：`podman-compose down -v` 删除 volume，再重新 `up -d --build`。
 
 ---
 
 **BUG-011：同步代码时文件放到 monorepo 根目录** | 归因：模型上下文不够
 
-*现象*：`git checkout huawei-backend/main -- src/` 后 `src/` 目录直接出现在 monorepo 根目录，而非 `code-agent/backend/src/`。
+**现象**：`git checkout huawei-backend/main -- src/` 后 `src/` 目录直接出现在 monorepo 根目录，而非 `code-agent/backend/src/`。
 
-*根因*：华为云后端仓库的 `src/` 在其根目录，checkout 到 monorepo 时按原路径存放，路径错位。
+**根因**：华为云后端仓库的 `src/` 在其根目录，checkout 到 monorepo 时按原路径存放，路径错位。
 
-*解法*：用 `git show <remote>/<branch>:<file> > code-agent/backend/<目标路径>` 指定输出路径，并用 `git rm -r --cached` 清理误放文件。
+**解法**：用 `git show <remote>/<branch>:<file> > code-agent/backend/<目标路径>` 指定输出路径，并用 `git rm -r --cached` 清理误放文件。
 
 ---
 
 **BUG-012：华为云后端 main 分支有保护规则，不允许 force push** | 归因：环境约束未传达
 
-*现象*：`git push huawei-backend <commit>:refs/heads/main --force` 报 `non-fast-forward`，推送被拒。
+**现象**：`git push huawei-backend <commit>:refs/heads/main --force` 报 `non-fast-forward`，推送被拒。
 
-*根因*：华为云 CodeHub 对 main 分支设置了分支保护规则，禁止 force push，需要通过 MR 合并。
+**根因**：华为云 CodeHub 对 main 分支设置了分支保护规则，禁止 force push，需要通过 MR 合并。
 
-*解法*：推送到临时分支，在华为云平台创建 MR 合并到 main。
+**解法**：推送到临时分支，在华为云平台创建 MR 合并到 main。
 
 ---
 
