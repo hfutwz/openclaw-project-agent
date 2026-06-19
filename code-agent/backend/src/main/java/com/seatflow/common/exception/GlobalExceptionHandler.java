@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e, HttpServletResponse response) {
         log.warn("Business exception: {}", e.getMessage());
-        response.setStatus(e.getCode() == 401 ? HttpServletResponse.SC_UNAUTHORIZED : HttpServletResponse.SC_BAD_REQUEST);
+        response.setStatus(toHttpStatus(e.getCode()));
         return Result.fail(e.getCode(), e.getMessage());
     }
 
@@ -42,5 +42,15 @@ public class GlobalExceptionHandler {
     public Result<Void> handleException(Exception e) {
         log.error("Unexpected error", e);
         return Result.fail(500, "服务器内部错误");
+    }
+
+    private int toHttpStatus(int code) {
+        return switch (code) {
+            case 401 -> HttpServletResponse.SC_UNAUTHORIZED;
+            case 403 -> HttpServletResponse.SC_FORBIDDEN;
+            case 404 -> HttpServletResponse.SC_NOT_FOUND;
+            case 409 -> HttpServletResponse.SC_CONFLICT;
+            default -> HttpServletResponse.SC_BAD_REQUEST;
+        };
     }
 }

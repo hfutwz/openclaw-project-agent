@@ -96,7 +96,7 @@ public class AssistantToolRunner {
                     };
                     String socketLabel = switch (s.getSocketType()) {
                         case "FIXED" -> "有固定插座";
-                        case "MOVABLE" -> "有移动导轨插座";
+                        case "TRACK" -> "有移动导轨插座";
                         default -> "无插座";
                     };
                     sb.append(String.format("  座位ID:%d %s [%s,%s]\n", s.getId(), s.getSeatNumber(), posLabel, socketLabel));

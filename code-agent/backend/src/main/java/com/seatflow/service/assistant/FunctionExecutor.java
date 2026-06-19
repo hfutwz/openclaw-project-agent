@@ -52,7 +52,7 @@ public class FunctionExecutor {
                                                 "start_time", Map.of("type", "string", "description", "开始时间，格式 HH:mm"),
                                                 "end_time", Map.of("type", "string", "description", "结束时间，格式 HH:mm"),
                                                 "room_id", Map.of("type", "number", "description", "自习室ID（可选）"),
-                                                "socket_type", Map.of("type", "string", "description", "插座类型：NONE/FIXED/MOVABLE（可选）"),
+                                                "socket_type", Map.of("type", "string", "description", "插座类型：NONE/FIXED/TRACK（可选）"),
                                                 "position", Map.of("type", "string", "description", "位置：WINDOW/CORRIDOR/MIDDLE（可选）")
                                         ),
                                         "required", List.of("date", "start_time", "end_time")

@@ -161,6 +161,47 @@ class RbacApiTest {
                 .andExpect(jsonPath("$.code", is(403)));
     }
 
+    @Test
+    @DisplayName("POST /api/admin/reservations as viewer (no reservation:manage) → 403")
+    void shouldDenyViewerAccessToAdminCreateReservation() throws Exception {
+        User viewerUser = new User();
+        viewerUser.setId(4L);
+        viewerUser.setUsername("viewer01");
+        viewerUser.setUserType("ADMIN");
+
+        when(userDetailsService.loadUserByUsername("viewer01"))
+                .thenReturn(buildUserDetails(viewerUser, List.of("reservation:view", "violation:view")));
+
+        String token = jwtTokenProvider.generateToken(4L, "viewer01", List.of("viewer"));
+
+        mockMvc.perform(post("/api/admin/reservations")
+                        .param("userId", "2")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"seatId\":1,\"date\":\"2026-06-18\",\"startTime\":\"10:00\",\"endTime\":\"11:00\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code", is(403)));
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/rooms/1/check-in-code as violation viewer → 403")
+    void shouldDenyViolationViewerAccessToCheckInCode() throws Exception {
+        User viewerUser = new User();
+        viewerUser.setId(4L);
+        viewerUser.setUsername("viewer01");
+        viewerUser.setUserType("ADMIN");
+
+        when(userDetailsService.loadUserByUsername("viewer01"))
+                .thenReturn(buildUserDetails(viewerUser, List.of("violation:view")));
+
+        String token = jwtTokenProvider.generateToken(4L, "viewer01", List.of("viewer"));
+
+        mockMvc.perform(get("/api/admin/rooms/1/check-in-code")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code", is(403)));
+    }
+
     // ==================== 异常路径：未登录访问管理接口 ====================
     @Test
     @DisplayName("GET /api/admin/roles without token → 401")

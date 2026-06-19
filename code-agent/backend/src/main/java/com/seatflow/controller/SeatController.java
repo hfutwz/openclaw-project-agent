@@ -28,6 +28,6 @@ public class SeatController {
      */
     @GetMapping("/{id}")
     public Result<SeatResponse> getSeat(@PathVariable Long roomId, @PathVariable Long id) {
-        return Result.ok(seatService.getById(id));
+        return Result.ok(seatService.getById(roomId, id));
     }
 }

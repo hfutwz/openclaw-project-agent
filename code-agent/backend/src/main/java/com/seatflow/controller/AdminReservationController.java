@@ -35,6 +35,7 @@ public class AdminReservationController {
      * A-RES08: 代客预约
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('reservation:manage')")
     public Result<ReservationResponse> createForUser(
             @RequestParam Long userId,
             @Valid @RequestBody ReservationCreateRequest request) {
@@ -45,6 +46,7 @@ public class AdminReservationController {
      * A-RES09: 管理员取消预约
      */
     @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAuthority('reservation:manage')")
     public Result<ReservationResponse> cancel(@PathVariable Long id) {
         return Result.ok(reservationService.adminCancel(id));
     }

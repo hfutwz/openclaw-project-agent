@@ -14,6 +14,7 @@ import com.seatflow.entity.Seat;
 import com.seatflow.mapper.DepartmentMapper;
 import com.seatflow.mapper.RoomMapper;
 import com.seatflow.mapper.SeatMapper;
+import com.seatflow.security.CustomUserDetails;
 import com.seatflow.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -188,12 +189,16 @@ public class RoomService {
     }
 
     private void checkDepartmentAccess(Room room) {
-        if (room.getDepartmentId() != null) {
-            Long userId = SecurityUtils.getCurrentUserId();
-            // If the user is admin, allow access
-            if (SecurityUtils.isAdmin()) return;
-            // For students, check department
-            // This is simplified - full implementation in M5 with RBAC
+        if (room.getDepartmentId() == null || SecurityUtils.isAdmin()) {
+            return;
+        }
+
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new BusinessException(401, "未登录或登录已过期");
+        }
+        if (!room.getDepartmentId().equals(currentUser.getDepartmentId())) {
+            throw new BusinessException(403, "无权访问该院系自习室");
         }
     }
 }

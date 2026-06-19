@@ -3,6 +3,7 @@ import { Form, Input, Button, Card, Typography, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { getDefaultAdminPath } from '../config/rbac'
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth()
@@ -12,7 +13,6 @@ const LoginPage: React.FC = () => {
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true)
-    // [SECURITY-DISABLED] 清除旧的认证缓存
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')
     localStorage.removeItem('loginUsername')
@@ -25,7 +25,7 @@ const LoginPage: React.FC = () => {
         const savedInfo = localStorage.getItem('userInfo')
         const info = savedInfo ? JSON.parse(savedInfo) : null
         if (info?.userType === 'ADMIN') {
-          navigate('/admin/dashboard')
+          navigate(getDefaultAdminPath(info))
         } else {
           navigate('/student/rooms')
         }

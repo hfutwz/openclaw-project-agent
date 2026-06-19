@@ -31,7 +31,9 @@ public class UserManageService {
         Page<User> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         if (userType != null) wrapper.eq(User::getUserType, userType);
-        if (keyword != null) wrapper.like(User::getUsername, keyword).or().like(User::getRealName, keyword);
+        if (keyword != null && !keyword.isBlank()) {
+            wrapper.and(w -> w.like(User::getUsername, keyword).or().like(User::getRealName, keyword));
+        }
         wrapper.orderByDesc(User::getId);
 
         Page<User> result = userMapper.selectPage(pageParam, wrapper);
@@ -63,6 +65,17 @@ public class UserManageService {
         user.setDepartmentId(request.getDepartmentId());
         user.setUserType(request.getUserType() != null ? request.getUserType() : "STUDENT");
         userMapper.insert(user);
+
+        List<Long> roleIds = resolveCreateRoleIds(request);
+        if (roleIds != null) {
+            validateRoleIds(roleIds);
+            for (Long roleId : roleIds.stream().distinct().toList()) {
+                UserRole ur = new UserRole();
+                ur.setUserId(user.getId());
+                ur.setRoleId(roleId);
+                userRoleMapper.insert(ur);
+            }
+        }
         return toUserResponse(user);
     }
 
@@ -79,12 +92,13 @@ public class UserManageService {
 
         // Update roles
         if (request.getRoleIds() != null) {
+            validateRoleIds(request.getRoleIds());
             // Delete old roles
             LambdaQueryWrapper<UserRole> deleteWrapper = new LambdaQueryWrapper<>();
             deleteWrapper.eq(UserRole::getUserId, id);
             userRoleMapper.delete(deleteWrapper);
             // Insert new roles
-            for (Long roleId : request.getRoleIds()) {
+            for (Long roleId : request.getRoleIds().stream().distinct().toList()) {
                 UserRole ur = new UserRole();
                 ur.setUserId(id);
                 ur.setRoleId(roleId);
@@ -112,13 +126,14 @@ public class UserManageService {
     public void assignRoles(Long userId, List<Long> roleIds) {
         User user = userMapper.selectById(userId);
         if (user == null) throw new BusinessException(404, "用户不存在");
+        validateRoleIds(roleIds);
         // 清空现有角色
         LambdaQueryWrapper<UserRole> deleteWrapper = new LambdaQueryWrapper<>();
         deleteWrapper.eq(UserRole::getUserId, userId);
         userRoleMapper.delete(deleteWrapper);
         // 重新分配
         if (roleIds != null) {
-            for (Long roleId : roleIds) {
+            for (Long roleId : roleIds.stream().distinct().toList()) {
                 UserRole ur = new UserRole();
                 ur.setUserId(userId);
                 ur.setRoleId(roleId);
@@ -166,5 +181,37 @@ public class UserManageService {
                 .permissions(permissions.stream().map(Permission::getCode).collect(Collectors.toList()))
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    private void validateRoleIds(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return;
+        }
+        for (Long roleId : roleIds.stream().distinct().toList()) {
+            if (roleId == null) {
+                throw new BusinessException(400, "角色ID不能为空");
+            }
+            Role role = roleMapper.selectById(roleId);
+            if (role == null) {
+                throw new BusinessException(400, "角色不存在: " + roleId);
+            }
+        }
+    }
+
+    private List<Long> resolveCreateRoleIds(UserCreateRequest request) {
+        if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
+            return request.getRoleIds();
+        }
+        String userType = request.getUserType() != null ? request.getUserType() : "STUDENT";
+        if (!"STUDENT".equals(userType)) {
+            return request.getRoleIds();
+        }
+
+        Role studentRole = roleMapper.selectOne(
+                new LambdaQueryWrapper<Role>()
+                        .eq(Role::getCode, "student")
+                        .eq(Role::getDeleted, 0)
+        );
+        return studentRole != null ? List.of(studentRole.getId()) : request.getRoleIds();
     }
 }

@@ -7,10 +7,11 @@ import com.seatflow.dto.request.SeatCreateRequest;
 import com.seatflow.dto.request.SeatUpdateRequest;
 import com.seatflow.dto.response.SeatResponse;
 import com.seatflow.entity.Room;
-import com.seatflow.entity.Room;
 import com.seatflow.entity.Seat;
 import com.seatflow.mapper.RoomMapper;
 import com.seatflow.mapper.SeatMapper;
+import com.seatflow.security.CustomUserDetails;
+import com.seatflow.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class SeatService {
     public List<SeatResponse> listByRoom(Long roomId) {
         Room room = roomMapper.selectById(roomId);
         if (room == null) throw new BusinessException(404, "自习室不存在");
+        checkDepartmentAccess(room);
 
         List<Seat> seats = seatMapper.selectList(
                 new LambdaQueryWrapper<Seat>()
@@ -44,9 +46,17 @@ public class SeatService {
     /**
      * 座位详情
      */
-    public SeatResponse getById(Long seatId) {
+    public SeatResponse getById(Long roomId, Long seatId) {
         Seat seat = seatMapper.selectById(seatId);
         if (seat == null) throw new BusinessException(404, "座位不存在");
+
+        if (!roomId.equals(seat.getRoomId())) {
+            throw new BusinessException(404, "座位不存在");
+        }
+        Room room = roomMapper.selectById(seat.getRoomId());
+        if (room == null) throw new BusinessException(404, "自习室不存在");
+        checkDepartmentAccess(room);
+
         return toSeatResponse(seat);
     }
 
@@ -93,6 +103,18 @@ public class SeatService {
      * 更新座位
      */
     @Transactional
+    public SeatResponse update(Long roomId, Long seatId, SeatUpdateRequest request) {
+        Seat seat = seatMapper.selectById(seatId);
+        if (seat == null || !roomId.equals(seat.getRoomId())) {
+            throw new BusinessException(404, "座位不存在");
+        }
+        return update(seatId, request);
+    }
+
+    /**
+     * 更新座位
+     */
+    @Transactional
     public SeatResponse update(Long seatId, SeatUpdateRequest request) {
         Seat seat = seatMapper.selectById(seatId);
         if (seat == null) throw new BusinessException(404, "座位不存在");
@@ -106,6 +128,18 @@ public class SeatService {
         seatMapper.updateById(seat);
 
         return toSeatResponse(seat);
+    }
+
+    /**
+     * 注销座位（逻辑删除）
+     */
+    @Transactional
+    public void remove(Long roomId, Long seatId) {
+        Seat seat = seatMapper.selectById(seatId);
+        if (seat == null || !roomId.equals(seat.getRoomId())) {
+            throw new BusinessException(404, "座位不存在");
+        }
+        remove(seatId);
     }
 
     /**
@@ -136,5 +170,19 @@ public class SeatService {
                 .status(seat.getStatus())
                 .isAvailable("AVAILABLE".equals(seat.getStatus()))
                 .build();
+    }
+
+    private void checkDepartmentAccess(Room room) {
+        if (room.getDepartmentId() == null || SecurityUtils.isAdmin()) {
+            return;
+        }
+
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new BusinessException(401, "未登录或登录已过期");
+        }
+        if (!room.getDepartmentId().equals(currentUser.getDepartmentId())) {
+            throw new BusinessException(403, "无权访问该院系自习室");
+        }
     }
 }

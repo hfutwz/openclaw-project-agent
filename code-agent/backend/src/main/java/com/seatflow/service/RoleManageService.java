@@ -56,7 +56,8 @@ public class RoleManageService {
 
         // Assign permissions
         if (request.getPermissionIds() != null) {
-            for (Long permId : request.getPermissionIds()) {
+            validatePermissionIds(request.getPermissionIds());
+            for (Long permId : request.getPermissionIds().stream().distinct().toList()) {
                 RolePermission rp = new RolePermission();
                 rp.setRoleId(role.getId());
                 rp.setPermissionId(permId);
@@ -77,10 +78,11 @@ public class RoleManageService {
 
         // Update permissions
         if (request.getPermissionIds() != null) {
+            validatePermissionIds(request.getPermissionIds());
             LambdaQueryWrapper<RolePermission> deleteWrapper = new LambdaQueryWrapper<>();
             deleteWrapper.eq(RolePermission::getRoleId, id);
             rolePermissionMapper.delete(deleteWrapper);
-            for (Long permId : request.getPermissionIds()) {
+            for (Long permId : request.getPermissionIds().stream().distinct().toList()) {
                 RolePermission rp = new RolePermission();
                 rp.setRoleId(id);
                 rp.setPermissionId(permId);
@@ -126,5 +128,20 @@ public class RoleManageService {
                 .permissionIds(permIds)
                 .permissions(permResponses)
                 .build();
+    }
+
+    private void validatePermissionIds(List<Long> permissionIds) {
+        if (permissionIds == null || permissionIds.isEmpty()) {
+            return;
+        }
+        for (Long permissionId : permissionIds.stream().distinct().toList()) {
+            if (permissionId == null) {
+                throw new BusinessException(400, "权限ID不能为空");
+            }
+            Permission permission = permissionMapper.selectById(permissionId);
+            if (permission == null) {
+                throw new BusinessException(400, "权限不存在: " + permissionId);
+            }
+        }
     }
 }

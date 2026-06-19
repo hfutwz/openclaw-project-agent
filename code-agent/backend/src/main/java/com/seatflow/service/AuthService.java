@@ -22,7 +22,7 @@ public interface AuthService {
     UserInfoResponse getCurrentUser(Long userId);
 
     /**
-     * [SECURITY-DISABLED] 根据用户名获取用户信息
+     * 根据用户名获取用户信息
      */
     UserInfoResponse getUserByUsername(String username);
 }

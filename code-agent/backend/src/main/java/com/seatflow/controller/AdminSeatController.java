@@ -41,7 +41,7 @@ public class AdminSeatController {
      */
     @PutMapping("/{id}")
     public Result<SeatResponse> update(@PathVariable Long roomId, @PathVariable Long id, @RequestBody SeatUpdateRequest request) {
-        return Result.ok(seatService.update(id, request));
+        return Result.ok(seatService.update(roomId, id, request));
     }
 
     /**
@@ -49,7 +49,7 @@ public class AdminSeatController {
      */
     @DeleteMapping("/{id}")
     public Result<Void> remove(@PathVariable Long roomId, @PathVariable Long id) {
-        seatService.remove(id);
+        seatService.remove(roomId, id);
         return Result.ok();
     }
 }

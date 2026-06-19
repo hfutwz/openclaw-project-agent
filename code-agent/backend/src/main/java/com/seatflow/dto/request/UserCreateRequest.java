@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class UserCreateRequest {
     @NotBlank(message = "用户名不能为空")
@@ -18,4 +20,5 @@ public class UserCreateRequest {
     private String email;
     private Long departmentId;
     private String userType = "STUDENT";
+    private List<Long> roleIds;
 }

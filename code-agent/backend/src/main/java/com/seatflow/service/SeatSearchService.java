@@ -1,6 +1,7 @@
 package com.seatflow.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.seatflow.common.exception.BusinessException;
 import com.seatflow.dto.response.SeatResponse;
 import com.seatflow.entity.Reservation;
 import com.seatflow.entity.Room;
@@ -8,6 +9,7 @@ import com.seatflow.entity.Seat;
 import com.seatflow.mapper.ReservationMapper;
 import com.seatflow.mapper.RoomMapper;
 import com.seatflow.mapper.SeatMapper;
+import com.seatflow.security.CustomUserDetails;
 import com.seatflow.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,28 +38,30 @@ public class SeatSearchService {
         LocalTime startTime = (startTimeStr != null && !startTimeStr.isEmpty()) ? LocalTime.parse(startTimeStr) : null;
         LocalTime endTime = (endTimeStr != null && !endTimeStr.isEmpty()) ? LocalTime.parse(endTimeStr) : null;
 
-        // 1. Filter rooms by department if specified
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new BusinessException(401, "未登录或登录已过期");
+        }
+
+        // 1. 根据当前用户身份过滤自习室：普通学生只能看全校共享或本院系自习室
         LambdaQueryWrapper<Room> roomWrapper = new LambdaQueryWrapper<>();
         roomWrapper.eq(Room::getStatus, "OPEN");
         if (roomId != null) {
             roomWrapper.eq(Room::getId, roomId);
         }
-        if (departmentId != null) {
-            roomWrapper.and(w -> w.isNull(Room::getDepartmentId).or().eq(Room::getDepartmentId, departmentId));
+        if (SecurityUtils.isAdmin()) {
+            if (departmentId != null) {
+                roomWrapper.and(w -> w.isNull(Room::getDepartmentId).or().eq(Room::getDepartmentId, departmentId));
+            }
+        } else if (currentUser.getDepartmentId() != null) {
+            roomWrapper.and(w -> w.isNull(Room::getDepartmentId).or().eq(Room::getDepartmentId, currentUser.getDepartmentId()));
+        } else {
+            roomWrapper.isNull(Room::getDepartmentId);
         }
 
-        // Check department permission for current user
-        Long userId = SecurityUtils.getCurrentUserId();
         List<Room> rooms = roomMapper.selectList(roomWrapper);
 
-        // Filter rooms by user's department access
         List<Long> accessibleRoomIds = rooms.stream()
-                .filter(room -> {
-                    if (room.getDepartmentId() == null) return true; // 全校共享
-                    // Check if user belongs to this department
-                    // For simplicity, allow if user has no department restriction or matches
-                    return true; // The department filtering is done at room level already
-                })
                 .map(Room::getId)
                 .collect(Collectors.toList());
 
@@ -71,7 +75,7 @@ public class SeatSearchService {
                 .eq(Seat::getStatus, "AVAILABLE");
         if (socketType != null && !socketType.isEmpty()) {
             if ("HAS_SOCKET".equals(socketType)) {
-                seatWrapper.in(Seat::getSocketType, List.of("FIXED", "MOVABLE"));
+                seatWrapper.in(Seat::getSocketType, List.of("FIXED", "TRACK"));
             } else {
                 seatWrapper.eq(Seat::getSocketType, socketType);
             }

@@ -1,6 +1,8 @@
 package com.seatflow;
 
 import com.seatflow.dto.request.LoginRequest;
+import com.seatflow.entity.Permission;
+import com.seatflow.entity.Role;
 import com.seatflow.entity.User;
 import com.seatflow.mapper.PermissionMapper;
 import com.seatflow.mapper.RoleMapper;
@@ -16,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -41,9 +42,6 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Set jwtExpiration field
-        ReflectionTestUtils.setField(authService, "jwtExpiration", 86400000L);
-
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("admin");
@@ -59,7 +57,11 @@ class AuthServiceTest {
         // Arrange
         when(userMapper.selectOne(any())).thenReturn(testUser);
         when(passwordEncoder.matches("admin123", testUser.getPassword())).thenReturn(true);
-        when(jwtTokenProvider.generateToken(1L, "admin", List.of("ADMIN"))).thenReturn("jwt-token-xxx");
+        when(roleMapper.selectByUserId(1L)).thenReturn(List.of(role(1L, "super_admin", "超级管理员")));
+        when(permissionMapper.selectByUserId(1L)).thenReturn(List.of(permission(8L, "user:manage", "用户角色分配")));
+        when(jwtTokenProvider.generateToken(1L, "admin", List.of("super_admin"), List.of("user:manage")))
+                .thenReturn("jwt-token-xxx");
+        when(jwtTokenProvider.getExpirationMs()).thenReturn(86400000L);
 
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
@@ -72,6 +74,8 @@ class AuthServiceTest {
         assertNotNull(result);
         assertEquals("jwt-token-xxx", result.getToken());
         assertEquals(86400000L, result.getExpiresIn());
+        assertEquals(List.of("super_admin"), result.getUserInfo().getRoles());
+        assertEquals(List.of("user:manage"), result.getUserInfo().getPermissions());
     }
 
     @Test
@@ -101,5 +105,21 @@ class AuthServiceTest {
         var ex = assertThrows(com.seatflow.common.exception.BusinessException.class,
                 () -> authService.login(request));
         assertEquals(401, ex.getCode());
+    }
+
+    private Role role(Long id, String code, String name) {
+        Role role = new Role();
+        role.setId(id);
+        role.setCode(code);
+        role.setName(name);
+        return role;
+    }
+
+    private Permission permission(Long id, String code, String name) {
+        Permission permission = new Permission();
+        permission.setId(id);
+        permission.setCode(code);
+        permission.setName(name);
+        return permission;
     }
 }

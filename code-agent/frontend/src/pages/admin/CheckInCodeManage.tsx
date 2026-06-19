@@ -17,9 +17,9 @@ const CheckInCodeManage: React.FC = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await roomApi.list()
+        const res = await roomApi.adminList(1, 200, 'OPEN')
         if (res.data.code === 200) {
-          setRooms(res.data.data)
+          setRooms(res.data.data.records)
         }
       } catch (e) {
         console.error(e)

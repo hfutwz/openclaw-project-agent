@@ -221,7 +221,7 @@ public class AssistantService {
                     bySocket.computeIfAbsent(s.getSocketType(), k -> new ArrayList<>()).add(s);
                 }
                 bySocket.forEach((type, list) -> {
-                    String typeLabel = "FIXED".equals(type) ? "⚡固定插座" : "MOVABLE".equals(type) || "TRACK".equals(type) ? "🔌移动导轨" : "普通";
+                    String typeLabel = "FIXED".equals(type) ? "⚡固定插座" : "TRACK".equals(type) ? "🔌移动导轨" : "普通";
                     sb.append(String.format("  %s: %s\n", typeLabel,
                             list.stream().map(Seat::getSeatNumber).limit(10).reduce((a, b) -> a + ", " + b).orElse("")));
                     if (list.size() > 10) sb.append(" 等").append(list.size()).append("个");

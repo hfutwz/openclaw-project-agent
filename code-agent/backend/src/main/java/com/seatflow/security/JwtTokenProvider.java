@@ -27,16 +27,24 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 生成 JWT Token（完整参数版，供生产使用）
+     * 生成 JWT Token（兼容旧调用）
      */
     public String generateToken(Long userId, String username, List<String> roles) {
+        return generateToken(userId, username, roles, Collections.emptyList());
+    }
+
+    /**
+     * 生成 JWT Token（包含用户 ID、角色与权限 claims）
+     */
+    public String generateToken(Long userId, String username, List<String> roles, List<String> permissions) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("username", username)
-                .claim("roles", roles)
+                .claim("roles", roles != null ? roles : Collections.emptyList())
+                .claim("permissions", permissions != null ? permissions : Collections.emptyList())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key)
@@ -54,6 +62,7 @@ public class JwtTokenProvider {
                 .subject("0")
                 .claim("username", username)
                 .claim("roles", Collections.emptyList())
+                .claim("permissions", Collections.emptyList())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key)
@@ -89,7 +98,18 @@ public class JwtTokenProvider {
     @SuppressWarnings("unchecked")
     public List<String> getRolesFromToken(String token) {
         Claims claims = parseToken(token);
-        return claims.get("roles", List.class);
+        List<String> roles = claims.get("roles", List.class);
+        return roles != null ? roles : Collections.emptyList();
+    }
+
+    /**
+     * 从 Token 中解析权限列表
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getPermissionsFromToken(String token) {
+        Claims claims = parseToken(token);
+        List<String> permissions = claims.get("permissions", List.class);
+        return permissions != null ? permissions : Collections.emptyList();
     }
 
     /**

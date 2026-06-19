@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
+import { ADMIN_PERMISSIONS, getDefaultAdminPath, hasAnyPermission, isAdminUser } from './config/rbac'
 
 // Layouts
 import StudentLayout from './layouts/StudentLayout'
@@ -59,10 +60,24 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // 路由守卫：仅管理员
 const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth()
-  if (user?.userType !== 'ADMIN') {
+  if (!isAdminUser(user)) {
     return <Navigate to="/403" replace />
   }
   return <>{children}</>
+}
+
+// 路由守卫：管理端具体权限
+const RequireAdminPermission: React.FC<{ permissions: string[]; children: React.ReactNode }> = ({ permissions, children }) => {
+  const { user } = useAuth()
+  if (!hasAnyPermission(user, permissions)) {
+    return <Navigate to="/403" replace />
+  }
+  return <>{children}</>
+}
+
+const AdminIndexRedirect: React.FC = () => {
+  const { user } = useAuth()
+  return <Navigate to={getDefaultAdminPath(user)} replace />
 }
 
 const App: React.FC = () => {
@@ -96,17 +111,17 @@ const App: React.FC = () => {
             </RequireAdmin>
           </RequireAuth>
         }>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="rooms" element={<RoomManage />} />
-          <Route path="seats" element={<SeatManage />} />
-          <Route path="seats/:roomId" element={<SeatManage />} />
-          <Route path="reservations" element={<ReservationManage />} />
-          <Route path="violations" element={<ViolationManage />} />
-          <Route path="users" element={<UserManage />} />
-          <Route path="roles" element={<RoleManage />} />
-          <Route path="config" element={<SystemConfigPage />} />
-          <Route path="check-in-codes" element={<CheckInCodeManage />} />
+          <Route index element={<AdminIndexRedirect />} />
+          <Route path="dashboard" element={<RequireAdminPermission permissions={ADMIN_PERMISSIONS}><Dashboard /></RequireAdminPermission>} />
+          <Route path="rooms" element={<RequireAdminPermission permissions={['room:manage']}><RoomManage /></RequireAdminPermission>} />
+          <Route path="seats" element={<RequireAdminPermission permissions={['seat:manage']}><SeatManage /></RequireAdminPermission>} />
+          <Route path="seats/:roomId" element={<RequireAdminPermission permissions={['seat:manage']}><SeatManage /></RequireAdminPermission>} />
+          <Route path="reservations" element={<RequireAdminPermission permissions={['reservation:view', 'reservation:manage']}><ReservationManage /></RequireAdminPermission>} />
+          <Route path="violations" element={<RequireAdminPermission permissions={['violation:view']}><ViolationManage /></RequireAdminPermission>} />
+          <Route path="users" element={<RequireAdminPermission permissions={['user:manage']}><UserManage /></RequireAdminPermission>} />
+          <Route path="roles" element={<RequireAdminPermission permissions={['role:manage']}><RoleManage /></RequireAdminPermission>} />
+          <Route path="config" element={<RequireAdminPermission permissions={['system:config']}><SystemConfigPage /></RequireAdminPermission>} />
+          <Route path="check-in-codes" element={<RequireAdminPermission permissions={['room:manage']}><CheckInCodeManage /></RequireAdminPermission>} />
         </Route>
 
         {/* 错误页面 */}

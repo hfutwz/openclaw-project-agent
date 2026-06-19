@@ -3,6 +3,7 @@ import { Table, Tag, Button, Select, DatePicker, Space, message, Popconfirm } fr
 import { CloseCircleOutlined } from '@ant-design/icons'
 import { reservationApi } from '../../services/reservation'
 import type { Reservation } from '../../services/reservation'
+import { usePermissions } from '../../hooks/usePermissions'
 
 const statusMap: Record<string, { color: string; label: string }> = {
   PENDING: { color: 'orange', label: '待签到' },
@@ -12,12 +13,14 @@ const statusMap: Record<string, { color: string; label: string }> = {
 }
 
 const ReservationManage: React.FC = () => {
+  const { hasPermission } = usePermissions()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string | undefined>()
   const [dateFilter, setDateFilter] = useState<string | undefined>()
+  const canManageReservations = hasPermission('reservation:manage')
 
   const fetchReservations = async (p = page) => {
     setLoading(true)
@@ -57,7 +60,7 @@ const ReservationManage: React.FC = () => {
     { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (s: string) => <Tag color={statusMap[s]?.color}>{statusMap[s]?.label || s}</Tag> },
     { title: '取消方', dataIndex: 'cancelledBy', key: 'cancelledBy', width: 80 },
     { title: '操作', key: 'action', width: 80, render: (_: any, r: Reservation) => (
-      (r.status === 'PENDING' || r.status === 'CHECKED_IN') ? (
+      canManageReservations && (r.status === 'PENDING' || r.status === 'CHECKED_IN') ? (
         <Popconfirm title="确认取消此预约？" onConfirm={() => handleCancel(r.id)}>
           <Button size="small" danger icon={<CloseCircleOutlined />}>取消</Button>
         </Popconfirm>

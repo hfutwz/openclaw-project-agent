@@ -24,6 +24,7 @@ public class AdminCheckInAndViolationController {
      * A-CODE01: 管理端获取教室当日签到编码
      */
     @GetMapping("/rooms/{roomId}/check-in-code")
+    @PreAuthorize("hasAuthority('room:manage')")
     public Result<Map<String, String>> getCheckInCode(@PathVariable Long roomId) {
         String code = checkInService.getTodayCode(roomId);
         return Result.ok(Map.of("code", code));
@@ -33,6 +34,7 @@ public class AdminCheckInAndViolationController {
      * A-VIO02: 管理端查看所有违约记录
      */
     @GetMapping("/violations")
+    @PreAuthorize("hasAuthority('violation:view')")
     public Result<Page<Violation>> listViolations(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,

@@ -49,9 +49,12 @@ public class AuthServiceImpl implements AuthService {
         List<Role> roles = roleMapper.selectByUserId(user.getId());
         List<String> roleCodes = roles.stream().map(Role::getCode).collect(Collectors.toList());
         List<Permission> permissions = permissionMapper.selectByUserId(user.getId());
+        List<String> permissionCodes = permissions.stream()
+                .map(Permission::getCode)
+                .distinct()
+                .collect(Collectors.toList());
 
-        // 生成 JWT Token
-        String token = jwtTokenProvider.generateToken(user.getId(), user.getUsername(), roleCodes);
+        String token = jwtTokenProvider.generateToken(user.getId(), user.getUsername(), roleCodes, permissionCodes);
 
         UserInfoResponse userInfo = UserInfoResponse.builder()
                 .id(user.getId())
@@ -61,10 +64,7 @@ public class AuthServiceImpl implements AuthService {
                 .departmentId(user.getDepartmentId())
                 .userType(user.getUserType())
                 .roles(roleCodes)
-                .permissions(permissions.stream()
-                        .map(Permission::getCode)
-                        .distinct()
-                        .collect(Collectors.toList()))
+                .permissions(permissionCodes)
                 .build();
 
         return LoginResponse.builder()
@@ -103,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * [SECURITY-DISABLED] 根据用户名获取用户信息
+     * 根据用户名获取用户信息
      */
     public UserInfoResponse getUserByUsername(String username) {
         User user = userMapper.selectOne(
@@ -111,6 +111,9 @@ public class AuthServiceImpl implements AuthService {
                         .eq(User::getUsername, username)
                         .eq(User::getDeleted, 0)
         );
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
 
         List<Role> roles = roleMapper.selectByUserId(user.getId());
         List<Permission> permissions = permissionMapper.selectByUserId(user.getId());

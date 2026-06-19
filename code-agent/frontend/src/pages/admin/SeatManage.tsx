@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Table, Button, Modal, Form, Input, InputNumber, Select, Tag, Space, message, Popconfirm, Card, Typography } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Table, Button, Modal, Form, Input, InputNumber, Select, Tag, Space, message, Popconfirm, Card, Typography, Divider, Alert } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { seatApi, roomApi } from '../../services/room'
 import type { Seat, Room } from '../../services/room'
 import SeatMap from '../../components/SeatMap/SeatMap'
@@ -15,6 +15,10 @@ const SeatManage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingSeat, setEditingSeat] = useState<Seat | null>(null)
   const [form] = Form.useForm()
+  // 批量生成
+  const [batchModalOpen, setBatchModalOpen] = useState(false)
+  const [batchLoading, setBatchLoading] = useState(false)
+  const [batchForm] = Form.useForm()
 
   // 加载自习室列表
   useEffect(() => {
@@ -85,6 +89,48 @@ const SeatManage: React.FC = () => {
     }
   }
 
+  // 批量生成座位
+  const handleBatchGenerate = async () => {
+    const values = await batchForm.validateFields()
+    const { rows, cols, socketType, windowRows, corridorCols } = values
+    const winRows: number[] = (windowRows || '')
+      .split(',')
+      .map((s: string) => parseInt(s.trim()))
+      .filter((n: number) => !isNaN(n))
+    const rawCorrCols: number[] = (corridorCols || '')
+      .split(',')
+      .map((s: string) => parseInt(s.trim()))
+      .filter((n: number) => !isNaN(n))
+
+    const rowLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    const requests: object[] = []
+
+    for (let r = 1; r <= rows; r++) {
+      for (let c = 1; c <= cols; c++) {
+        const seatNumber = `${rowLetters[r - 1]}${c}`
+        // 将负数列号转为实際列号（-1 => cols）
+        const resolvedCorrCols = rawCorrCols.map((n: number) => n < 0 ? cols + n + 1 : n)
+        let position = 'MIDDLE'
+        if (winRows.includes(r)) position = 'WINDOW'
+        else if (resolvedCorrCols.includes(c)) position = 'CORRIDOR'
+        requests.push({ seatNumber, rowNum: r, colNum: c, socketType, position, status: 'AVAILABLE' })
+      }
+    }
+
+    setBatchLoading(true)
+    try {
+      await seatApi.adminBatchCreate(rid, requests)
+      message.success(`成功生成 ${requests.length} 个座位`)
+      setBatchModalOpen(false)
+      batchForm.resetFields()
+      fetchSeats()
+    } catch (e: any) {
+      message.error(e.response?.data?.message || '批量生成失败')
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
   const handleDelete = async (seatId: number) => {
     try {
       await seatApi.adminDelete(rid, seatId)
@@ -132,7 +178,18 @@ const SeatManage: React.FC = () => {
             options={rooms.map(r => ({ value: r.id, label: r.name }))}
           />
         </Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新增座位</Button>
+        <Space>
+          <Button
+            icon={<ThunderboltOutlined />}
+            onClick={() => {
+              if (!selectedRoomId) { message.warning('请先选择自习室'); return }
+              batchForm.resetFields()
+              batchForm.setFieldsValue({ rows: 4, cols: 6, socketType: 'NONE', windowRows: '1', corridorCols: '1,-1' })
+              setBatchModalOpen(true)
+            }}
+          >批量生成座位</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新增座位</Button>
+        </Space>
       </div>
 
       {seats.length > 0 && (
@@ -173,6 +230,7 @@ const SeatManage: React.FC = () => {
               { value: 'NONE', label: '无' },
               { value: 'FIXED', label: '⚡ 固定插座' },
               { value: 'MOVABLE', label: '🔌 移动导轨' },
+              { value: 'TRACK', label: '🔌 移动导轨' },
             ]} />
           </Form.Item>
           <Form.Item name="position" label="位置标记">
@@ -190,6 +248,55 @@ const SeatManage: React.FC = () => {
               ]} />
             </Form.Item>
           )}
+        </Form>
+      </Modal>
+      {/* 批量生成 Modal */}
+      <Modal
+        title="批量生成座位"
+        open={batchModalOpen}
+        onOk={handleBatchGenerate}
+        confirmLoading={batchLoading}
+        onCancel={() => setBatchModalOpen(false)}
+        destroyOnClose
+        width={480}
+      >
+        <Alert
+          message="系统按行列矩阵自动生成座位，编号格式 A1、A2…B1、B2…"
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+        <Form form={batchForm} layout="vertical">
+          <Space style={{ width: '100%' }} size={16}>
+            <Form.Item name="rows" label="行数" rules={[{ required: true }]} style={{ flex: 1, marginBottom: 8 }}>
+              <InputNumber min={1} max={26} style={{ width: '100%' }} placeholder="如 4" />
+            </Form.Item>
+            <Form.Item name="cols" label="列数" rules={[{ required: true }]} style={{ flex: 1, marginBottom: 8 }}>
+              <InputNumber min={1} max={30} style={{ width: '100%' }} placeholder="如 6" />
+            </Form.Item>
+          </Space>
+          <Form.Item name="socketType" label="默认插座类型" rules={[{ required: true }]}>
+            <Select options={[
+              { value: 'NONE', label: '无插座' },
+              { value: 'FIXED', label: '⚡ 固定插座' },
+              { value: 'TRACK', label: '🔌 移动导轨插座' },
+            ]} />
+          </Form.Item>
+          <Divider plain style={{ margin: '8px 0' }}>位置自动标记规则</Divider>
+          <Form.Item
+            name="windowRows"
+            label="靠窗行（逗号分隔行号）"
+            extra="如输入 1 则第1行为靠窗座位，留空则不标记靠窗"
+          >
+            <Input placeholder="1" />
+          </Form.Item>
+          <Form.Item
+            name="corridorCols"
+            label="靠走廊列（逗号分隔，-1 表示最后一列）"
+            extra="如输入 1,-1 则第1列和最后一列为靠走廊座位"
+          >
+            <Input placeholder="1,-1" />
+          </Form.Item>
         </Form>
       </Modal>
     </div>

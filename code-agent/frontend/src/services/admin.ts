@@ -53,6 +53,7 @@ export const userApi = {
   get: (id: number) => api.get<{ code: number; data: UserItem }>(`/admin/users/${id}`),
   create: (data: any) => api.post('/admin/users', data),
   update: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
+  assignRoles: (id: number, roleIds: number[]) => api.put(`/admin/users/${id}/roles`, roleIds),
   delete: (id: number) => api.delete(`/admin/users/${id}`),
 }
 

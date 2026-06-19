@@ -14,30 +14,31 @@ import {
   UserOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../hooks/useAuth'
-import { usePermissions } from '../hooks/usePermissions'
+import { ADMIN_PERMISSIONS, hasAnyPermission } from '../config/rbac'
 
 const { Header, Sider, Content } = Layout
 
 const AdminLayout: React.FC = () => {
   const { userInfo, logout } = useAuth()
-  const { hasPermission } = usePermissions()
   const navigate = useNavigate()
   const location = useLocation()
 
   const allMenuItems = [
-    { key: '/admin/dashboard', icon: <DashboardOutlined />, label: '仪表盘', permission: 'reservation:view' },
-    { key: '/admin/rooms', icon: <HomeOutlined />, label: '自习室管理', permission: 'room:manage' },
-    { key: '/admin/seats', icon: <HomeOutlined />, label: '座位管理', permission: 'seat:manage' },
-    { key: '/admin/reservations', icon: <CalendarOutlined />, label: '预约管理', permission: 'reservation:view' },
-    { key: '/admin/violations', icon: <WarningOutlined />, label: '违约管理', permission: 'violation:view' },
-    { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理', permission: 'user:manage' },
-    { key: '/admin/roles', icon: <SafetyOutlined />, label: '角色管理', permission: 'role:manage' },
-    { key: '/admin/config', icon: <SettingOutlined />, label: '系统参数', permission: 'system:config' },
-    { key: '/admin/check-in-codes', icon: <KeyOutlined />, label: '签到编码', permission: 'room:manage' },
+    { key: '/admin/dashboard', icon: <DashboardOutlined />, label: '仪表盘', permissions: ADMIN_PERMISSIONS },
+    { key: '/admin/rooms', icon: <HomeOutlined />, label: '自习室管理', permissions: ['room:manage'] },
+    { key: '/admin/seats', icon: <HomeOutlined />, label: '座位管理', permissions: ['seat:manage'] },
+    { key: '/admin/reservations', icon: <CalendarOutlined />, label: '预约管理', permissions: ['reservation:view', 'reservation:manage'] },
+    { key: '/admin/violations', icon: <WarningOutlined />, label: '违约管理', permissions: ['violation:view'] },
+    { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理', permissions: ['user:manage'] },
+    { key: '/admin/roles', icon: <SafetyOutlined />, label: '角色管理', permissions: ['role:manage'] },
+    { key: '/admin/config', icon: <SettingOutlined />, label: '系统参数', permissions: ['system:config'] },
+    { key: '/admin/check-in-codes', icon: <KeyOutlined />, label: '签到编码', permissions: ['room:manage'] },
   ]
 
   // 按权限过滤菜单项
-  const menuItems = allMenuItems.filter(item => hasPermission(item.permission))
+  const menuItems = allMenuItems
+    .filter(item => hasAnyPermission(userInfo, item.permissions))
+    .map(({ permissions, ...item }) => item)
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

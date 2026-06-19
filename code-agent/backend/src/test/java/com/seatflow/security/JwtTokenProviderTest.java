@@ -1,14 +1,13 @@
 package com.seatflow.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +46,21 @@ class JwtTokenProviderTest {
         String username = jwtTokenProvider.getUsername(token);
 
         assertThat(username).isEqualTo("student01");
+    }
+
+    @Test
+    @DisplayName("should extract roles and permissions from valid token")
+    void shouldExtractRolesAndPermissionsFromValidToken() {
+        String token = jwtTokenProvider.generateToken(
+                1L,
+                "admin",
+                List.of("super_admin"),
+                List.of("role:manage", "user:manage"));
+
+        assertThat(jwtTokenProvider.getUserIdFromToken(token)).isEqualTo(1L);
+        assertThat(jwtTokenProvider.getRolesFromToken(token)).containsExactly("super_admin");
+        assertThat(jwtTokenProvider.getPermissionsFromToken(token))
+                .containsExactly("role:manage", "user:manage");
     }
 
     @Test
