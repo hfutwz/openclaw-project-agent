@@ -5,15 +5,11 @@
 
 **关键词**：Vibe Coding；用户故事；敏捷开发；软件过程管理；CI/CD
 
----
-
 ## 一、引言
 
 2026 年以来，以 Claude Code、GitHub Copilot、Cursor 为代表的 AI 编程工具快速普及，催生了 Vibe Coding 这一新型开发范式。开发者以自然语言描述意图，由 LLM 负责代码生成与修改，人类退化为意图提供者和验收者[1]。这一模式对传统软件过程管理带来了深刻冲击，当代码生成速度以小时计、Bug 修复以秒计时，Scrum 的两周迭代、代码审查的人工流程、需求文档的精细拆解，是否还有意义？
 
 本文以《软件过程管理》课程 Lab 项目 —— 自习座位预约系统 SeatFlow 为具体载体，尝试回答上述问题。SeatFlow 是一个涵盖学生预约、签到、RBAC 权限管理与智能助手的 Web 全栈系统，由 6 名组员在 AI 辅助下协作开发，历时数月。本文不是泛泛而谈 AI 如何提效，而是从真实的提交记录、实测 Bug、团队冲突和流程决策出发，探讨 AI 时代软件过程管理的具体实践路径。
-
----
 
 ## 二、实验需求分析与团队分工
 
@@ -77,8 +73,6 @@ Lab 采用用户故事作为最小任务粒度，共识别 17 个用户故事，
 | 代码 Review                 | Claude 4.7 Sonnet | 极高     | Review Agent 独立上下文审查，人工确认并决策 |
 | 测试样例生成                    | Kimi K2.6         | 中      | Test Agent 生成用例，人工执行验证 |
 | Bug 修复                    | Claude 4.7 Sonnet | 中      | AI 定位根因，人工确认修复方向 |
-
----
 
 ### 2.4 Vibe Coding 准备：Agent 配置文件设计与架构规划
 
@@ -248,8 +242,6 @@ src/
 - 图标标注特征：⚡ 插座 / 🪟 靠窗 / 🚶 走廊
 - 点击座位弹出预约时间选择弹窗，时间选择器限制整点小时、最多4小时
 
----
-
 ## 四、初始化阶段：基于 OpenClaw 的单 Agent 上下文搭建
 
 ### 4.1 为什么需要专门的初始化阶段
@@ -305,8 +297,6 @@ Vibe Coding 最大的挑战不是模型能力，而是**上下文管理**。LLM 
 
 初始化完成后，每个新建的 Agent 会话可以在30秒内达到"了解项目全貌"的状态，而不需要重新解释背景。这在多人协作、跨天开发的场景中节省了大量的上下文重建成本。
 
----
-
 ## 五、设计阶段：多 Agent 协作框架
 
 ### 5.1 为什么需要多 Agent
@@ -352,8 +342,6 @@ Vibe Coding 最大的挑战不是模型能力，而是**上下文管理**。LLM 
 `plan/plan.md` 是整个开发的"北极星"——Code Agent 的每一次生成任务都以 Plan 中的用户故事和接口规范为基准。这产生了一个重要约束：**Plan 文件不能被随意修改**。一旦 Plan 改变，已有代码的逻辑依据就会消失，AI 下次生成时可能产生与已有代码矛盾的实现。
 
 这与传统软件工程的"需求冻结"原则完全一致，只是在 AI 辅助开发中表现更为极端——因为 AI 没有人类工程师的上下文记忆，它完全依赖当前可见的文档来理解系统状态。
-
----
 
 ## 六、开发阶段：分支策略、Bug 归因与团队协作
 
@@ -490,8 +478,6 @@ deploy/mysql/
 
 完整冲突记录见**附录一**。
 
----
-
 ## 七、CI/CD 流水线的理解
 
 ### 7.1 流水线整体设计
@@ -539,8 +525,6 @@ SQL schema 变更遵循版本化设计原则：
 - `data.sql`（v1.0→v2.0→v3.0）：种子数据，用 `INSERT IGNORE` 保证幂等
 
 生产环境应迁移到 Flyway 管理，实现版本化迁移文件（`V1__init.sql`、`V2__add_column.sql`）和自动检测未执行迁移脚本，而非依赖 `init.sql` 一次性初始化的脆弱机制。
-
----
 
 ## 八、Vibe Coding 过程总结与个人开发 SOP
 
@@ -629,8 +613,6 @@ AI 辅助编程天然适合个人开发，但在多人协作中，AI 成为了�
 4. 每个 Agent 只读取自己需要的文件，避免上下文污染
 ```
 
----
-
 ## 九、软件过程管理核心概念的 AI 时代适应
 
 ### 9.1 Scrum 框架的适应
@@ -667,8 +649,6 @@ AI 没有消灭 Scrum，而是**加速了每个 Sprint 的速度**，同时对"�
 
 AI 辅助开发没有消灭这些风险，只是改变了风险的具体表现形式。技术风险的来源从"开发者对框架理解不足"变为"AI 对框架边界行为理解不足"；但本质上都是技术风险，处置方式也相同——加强技术验证，显式配置而非依赖默认行为。
 
----
-
 ## 十、结论
 
 本文通过对 SeatFlow 项目的系统回顾，得出以下核心结论：
@@ -694,8 +674,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 《软件过程管理》课程的核心教益在于让我理解：软件开发不只是技术问题，更是协调问题——协调人与人、人与工具、工具与工具之间的预期一致性。这一洞见在 AI 辅助开发时代非但没有过时，反而因为"AI 是个完全按指令行事但没有主动沟通能力的协作者"而变得更加关键。
 
 如何写出让 AI 能够正确执行的"指令"，如何设计让 AI 生成的代码被人类可验证的"验收标准"，如何在 AI 参与下维护团队协作的一致性——这些问题的答案，正是软件过程管理这门学科在 AI 时代的新使命。
-
----
 
 ## 参考文献
 
@@ -723,8 +701,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 [12] Scrum中文网. (2025). 未来已来，AI时代，团队为何更需要自组织与敏捷能力？. https://www.scrum.cn/41176.html
 
----
-
 本文基于 SeatFlow 项目真实开发过程撰写。
 
 项目代码（GitHub monorepo）：https://github.com/hfutwz/openclaw-project-agent
@@ -733,13 +709,11 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 华为云前端仓库（seat_booking_web）：https://devcloud.cn-east-3.huaweicloud.com/codehub/8010865/home
 
----
-
 ## 附录
 
 ### 附录一：团队协作冲突完整记录（team_work_coding.md）
 
-> 5人小组 Vibe Coding 协作开发过程中遇到的所有团队冲突问题、复现场景与解法。目标：帮助后续类似项目避免重蹈覆辙。
+5人小组 Vibe Coding 协作开发过程中遇到的所有团队冲突问题、复现场景与解法。目标：帮助后续类似项目避免重蹈覆辙。
 
 **CONFLICT-001：本地 MySQL 配置各不相同**
 
@@ -751,8 +725,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **更优解法**：用 `application-local.yml` + `.gitignore` 隔离本地配置，每人本地创建覆盖文件，不提交到 git。
 
----
-
 **CONFLICT-002：init.sql 数据频繁修改导致合并冲突**
 
 **冲突现象**：组员 A 扩充自习室/座位数据（data.sql v2.0→v3.0），组员 B 同时添加 RBAC 权限数据，两人修改同一文件，pull 时产生 merge conflict。
@@ -762,8 +734,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 **解法**：人工合并后统一为 v2.0 版本，用 `INSERT IGNORE` 保证幂等。
 
 **更优解法**：按模块拆分 SQL 文件，MySQL 容器按字母顺序执行 `docker-entrypoint-initdb.d/` 下所有 `.sql`。
-
----
 
 **CONFLICT-003：BCrypt 密码 Hash 不一致导致登录失败**
 
@@ -775,8 +745,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **规范**：由一人统一生成所有测试账号 hash，注释写明明文，禁止个人修改。
 
----
-
 **CONFLICT-004：代码同步时整目录覆盖，丢失已有改动**
 
 **冲突现象**：`git checkout huawei-frontend/main -- src/` 整目录覆盖，批量座位生成功能消失。
@@ -787,8 +755,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **规范**：同步他人代码**永远用 `git merge`，不用 `git checkout -- <dir>`**。
 
----
-
 **CONFLICT-005：monorepo 路径导致文件放错位置**
 
 **冲突现象**：`git checkout huawei-backend/main -- src/` 后 `src/` 出现在 monorepo 根目录（应在 `code-agent/backend/src/`）。
@@ -796,8 +762,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 **根因**：华为云后端仓库的 `src/` 在其根目录，checkout 到 monorepo 时按原路径存放，路径错位。
 
 **解法**：用 `git show <remote>:<src> > <dst>` 指定输出路径；用 `git rm -r --cached` 清理误放文件。
-
----
 
 **CONFLICT-006：RBAC 表结构多人各自定义冲突**
 
@@ -809,8 +773,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **更优解法**：开发前召开"表结构评审会"，每人只负责自己模块的 `data_*.sql`，不允许修改他人负责的表。
 
----
-
 **CONFLICT-007：华为云 main 分支保护规则拒绝 force push**
 
 **冲突现象**：`git push huawei-backend <commit>:main --force` 报 `non-fast-forward` 被拒。
@@ -818,8 +780,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 **根因**：华为云 CodeHub 对 main 分支设置保护规则，禁止 force push，要求通过 MR 合并。
 
 **解法**：推送到临时分支，在华为云 Web UI 创建 MR 合并到 main。
-
----
 
 **CONFLICT-008：MySQL Volume 未清空，init.sql 更新不生效**
 
@@ -829,15 +789,11 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **解法**：`podman-compose down -v` 删除 volume，重新 `up -d --build`。
 
----
-
 **CONFLICT-009：前端构建工具冲突（npm vs pnpm）**
 
 **冲突现象**：部分组员用 `npm install`，内部 registry 篡改 `package.json`，`pnpm-lock.yaml` 与 `package-lock.json` 同时存在导致构建不一致。
 
 **解法**：强制规定只用 pnpm，删除 `package-lock.json`，在 `package.json` 中加入 `engines` 约束。
-
----
 
 **CONFLICT-010：unrelated histories 导致 git pull 报错**
 
@@ -846,8 +802,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 **根因**：`git subtree split` 生成的提交树与组员本地 clone 历史没有公共祖先节点。
 
 **解法**：`git fetch origin && git reset --hard origin/main` 强制对齐远端版本。
-
----
 
 **团队协作规范总结**
 
@@ -864,11 +818,9 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 | 表结构 | 开发前统一评审；每人只维护自己模块的表 |
 | git 初始化 | 有 force push 时通知全员重新 clone |
 
----
-
 ### 附录二：开发过程 Bug 完整记录（process_bug.md）
 
-> Vibe Coding 多 Agent 协作项目，所有 Bug 均发生在 AI 辅助开发过程中。本记录用于复盘和归因。
+Vibe Coding 多 Agent 协作项目，所有 Bug 均发生在 AI 辅助开发过程中。本记录用于复盘和归因。
 
 **BUG-001：登录返回 302 重定向，无法登录** | 归因：模型上下文不够
 
@@ -877,8 +829,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 **根因**：`spring-boot-starter-security` 依赖存在时，即使注释了 `@EnableWebSecurity`，只要没有显式定义 `SecurityFilterChain` bean，Spring Boot auto-config 就会启用默认 formLogin 机制，将未认证请求302重定向到 `/login`（无端口号）。
 
 **解法**：恢复 `@EnableWebSecurity` + 显式定义 `SecurityFilterChain` bean，设置 `anyRequest().permitAll()`，禁用 formLogin/httpBasic/CSRF/Stateless session。
-
----
 
 **BUG-002：登录成功但用户信息为空，前端无法判断角色** | 归因：需求描述不清楚
 
@@ -890,8 +840,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 **归因**：需求描述只写了"验证用户名密码"，没有明确"返回角色权限信息"，Code Agent 按最小实现来做。
 
----
-
 **BUG-003：登录成功后所有用户都跳转到学生端** | 归因：需求拆解不够细
 
 **现象**：admin 登录后跳转到 `/student/rooms`，而非管理端。
@@ -899,8 +847,6 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 **根因**：`Login.tsx` 中写死了 `navigate('/student/rooms')`，未根据用户角色动态跳转。
 
 **解法**：读取 `localStorage.userInfo.userType`，ADMIN 跳转 `/admin/dashboard`，STUDENT 跳转 `/student/rooms`。
-
----
 
 **BUG-004：数据库中文乱码** | 归因：模型上下文不够
 
@@ -915,8 +861,6 @@ SET CHARACTER SET utf8mb4;
 SET character_set_connection=utf8mb4;
 ```
 
----
-
 **BUG-005：Dockerfile 构建失败** | 归因：需求描述不清楚
 
 **现象**：后端 `mvn: command not found`；前端 pnpm 11 要求 Node 22+，安装依赖报版本错误。
@@ -924,8 +868,6 @@ SET character_set_connection=utf8mb4;
 **根因**：Code Agent 选择了基础 JDK 镜像（无 Maven）；前端镜像版本未考虑 pnpm 版本要求。
 
 **解法**：`eclipse-temurin:21-jdk` → `maven:3.9-eclipse-temurin-21`；`node:20-alpine` → `node:22-alpine`。
-
----
 
 **BUG-006：前端构建验证不完整** | 归因：开发者 taste 不对
 
@@ -935,8 +877,6 @@ SET character_set_connection=utf8mb4;
 
 **解法**：规定推送前必须执行完整的 `pnpm build`（= `tsc -b && vite build`）。
 
----
-
 **BUG-007：pnpm 安装被内部 npm registry 污染** | 归因：环境约束未传达
 
 **现象**：`npm install` 报包缺失，或 `package.json` 被篡改写入内部源地址。
@@ -945,8 +885,6 @@ SET character_set_connection=utf8mb4;
 
 **解法**：全部改用 pnpm + 公共源，将"前端只用 pnpm"作为强约束写入项目规范。
 
----
-
 **BUG-008：git 推送出现 "refusing to merge unrelated histories"** | 归因：技术方案副作用考虑不足
 
 **现象**：组员 `git pull` 报 `refusing to merge unrelated histories`。
@@ -954,8 +892,6 @@ SET character_set_connection=utf8mb4;
 **根因**：`git subtree split` 生成的提交历史是全新的，与组员通过 `git clone` 拿到的历史没有公共祖先节点。
 
 **解法**：`git fetch origin && git reset --hard origin/main` 强制对齐远端。
-
----
 
 **BUG-009：批量座位生成 UI 被组员代码覆盖** | 归因：需求描述不清楚
 
@@ -969,8 +905,6 @@ git show huawei-frontend/feature/task_a_room_management:src/pages/admin/SeatMana
   > code-agent/frontend/src/pages/admin/SeatManage.tsx
 ```
 
----
-
 **BUG-010：MySQL Volume 未清空导致 init.sql 不生效** | 归因：开发者 taste 不对
 
 **现象**：更新了 `init.sql`，重启 podman 后前端仍显示旧数据，自习室只有4个而非6个。
@@ -978,8 +912,6 @@ git show huawei-frontend/feature/task_a_room_management:src/pages/admin/SeatMana
 **根因**：MySQL 容器使用 named volume 持久化数据。volume 已存在时 MySQL 直接跳过 `init.sql`，使用已有数据。
 
 **解法**：`podman-compose down -v` 删除 volume，再重新 `up -d --build`。
-
----
 
 **BUG-011：同步代码时文件放到 monorepo 根目录** | 归因：模型上下文不够
 
@@ -989,8 +921,6 @@ git show huawei-frontend/feature/task_a_room_management:src/pages/admin/SeatMana
 
 **解法**：用 `git show <remote>/<branch>:<file> > code-agent/backend/<目标路径>` 指定输出路径，并用 `git rm -r --cached` 清理误放文件。
 
----
-
 **BUG-012：华为云后端 main 分支有保护规则，不允许 force push** | 归因：环境约束未传达
 
 **现象**：`git push huawei-backend <commit>:refs/heads/main --force` 报 `non-fast-forward`，推送被拒。
@@ -998,8 +928,6 @@ git show huawei-frontend/feature/task_a_room_management:src/pages/admin/SeatMana
 **根因**：华为云 CodeHub 对 main 分支设置了分支保护规则，禁止 force push，需要通过 MR 合并。
 
 **解法**：推送到临时分支，在华为云平台创建 MR 合并到 main。
-
----
 
 **归因总结**
 
