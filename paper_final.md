@@ -249,85 +249,7 @@ deploy/mysql/
 ---
 
 以下为完整团队协作冲突记录（引自项目 `team_work_coding.md`）：
-
----
-
-### 附录一：团队协作冲突完整记录（team_work_coding.md）
-
-> 5人小组 Vibe Coding 协作开发过程中遇到的所有团队冲突问题、复现场景与解法。
-
-**CONFLICT-001：本地 MySQL 配置各不相同**
-
-*冲突现象*：组员 A 本地 MySQL root 密码是 `root`，组员 B 是 `123456`，组员 C 没有本地 MySQL；`application.yml` 写死了一个人的配置，拉取代码后直接运行报 `Access denied`。
-
-*解法*：统一用 Docker/Podman 部署 MySQL，密码由 `deploy/.env` 统一管理，后端 `application.yml` 通过环境变量引用：`${DB_PASSWORD:seatflow123}`。
-
-**CONFLICT-002：init.sql 数据频繁修改导致合并冲突**
-
-*冲突现象*：组员 A 扩充自习室/座位数据，组员 B 添加 RBAC 权限数据，两人同时修改 `data.sql`，pull 时产生 merge conflict。
-
-*解法*：人工合并后统一为 v2.0 版本，用 `INSERT IGNORE` 保证幂等。更优解法：按模块拆分 SQL 文件，利用容器 entrypoint 自动按序执行。
-
-**CONFLICT-003：BCrypt 密码 Hash 不一致导致登录失败**
-
-*冲突现象*：组员 B 写 `data.sql` 时用自己生成的 BCrypt hash，注释写 `-- admin123 ->` 但实际 hash 对应密码未知，导致其他组员登录报"密码错误"。
-
-*解法*：统一替换回项目初始验证过的 hash（`admin123` → `$2a$10$XiJZ...`），并规定由一人统一生成所有测试账号 hash。
-
-**CONFLICT-004：代码同步时整目录覆盖，丢失已有改动**
-
-*冲突现象*：`git checkout huawei-frontend/main -- src/` 整目录覆盖，组员 A 的批量座位生成功能消失。
-
-*解法*：`git show huawei-frontend/feature/...:src/pages/admin/SeatManage.tsx > code-agent/frontend/src/pages/admin/SeatManage.tsx` 从历史恢复文件。
-
-**CONFLICT-005：monorepo 路径导致文件放错位置**
-
-*冲突现象*：`git checkout huawei-backend/main -- src/` 后 `src/` 出现在 monorepo 根目录而非 `code-agent/backend/src/`。
-
-*解法*：用 `git show <remote>:<src> > <dst>` 指定输出路径；用 `git rm -r --cached` 清理误放文件。
-
-**CONFLICT-006：RBAC 表结构多人各自定义冲突**
-
-*冲突现象*：组员 A、B 各自定义了权限相关表，字段名不一致，合并时双重定义报错。
-
-*解法*：以组员 B RBAC 设计为准，删除组员 A 的重复表定义，用 `INSERT IGNORE + SELECT JOIN` 插入权限关联数据。
-
-**CONFLICT-007：华为云 main 分支保护规则拒绝 force push**
-
-*冲突现象*：`git push huawei-backend <commit>:main --force` 被拒，报 `non-fast-forward`。
-
-*解法*：推送到临时分支 `sync-main-task-a`，在华为云 Web UI 创建 MR 合并到 main。
-
-**CONFLICT-008：MySQL Volume 未清空，init.sql 更新不生效**
-
-*冲突现象*：更新 `init.sql` 重启容器后数据仍是旧的，前端自习室只显示4个而非6个。
-
-*解法*：`podman-compose down -v` 删除 volume，重新 `up -d --build`，MySQL 重新初始化。
-
-**CONFLICT-009：前端构建工具冲突（npm vs pnpm）**
-
-*冲突现象*：部分组员用 `npm install`，内部 registry 篡改 `package.json`，`pnpm-lock.yaml` 与 `package-lock.json` 同时存在导致构建不一致。
-
-*解法*：强制规定只用 pnpm，删除 `package-lock.json`，在 `package.json` 中加入 `engines` 约束。
-
-**CONFLICT-010：unrelated histories 导致 git pull 报错**
-
-*冲突现象*：`git subtree split` 生成的历史与组员本地 clone 历史没有公共祖先，`git pull` 报 `refusing to merge unrelated histories`。
-
-*解法*：`git fetch origin && git reset --hard origin/main` 强制对齐远端。
-
-**团队协作规范总结（防止冲突清单）**
-
-| 类别 | 规范 |
-|---|---|
-| 数据库配置 | 统一用 Docker/Podman；密码写在 `.env`，不硬编码 |
-| SQL 文件 | 按模块拆分；每次变更后告知全员 `down -v` 重建 |
-| 密码 Hash | 由一人统一生成；注释写明明文 |
-| 代码同步 | 用 `git merge`，不用 `git checkout -- <dir>` |
-| 分支策略 | feature → MR → main；禁止直接 push main |
-| 前端工具 | 只用 pnpm；推送前 `pnpm build` 零错误 |
-| 后端验证 | 推送前 `mvn compile` 零错误 |
-| 表结构 | 开发前统一评审；每人只维护自己模块的表 |
+团队协作冲突完整记录详见文末附录一。
 
 ---
 
@@ -371,71 +293,7 @@ SET character_set_connection=utf8mb4;
 
 这个错误暴露了 AI 对 Docker volume 生命周期的理解盲点：它能正确生成 `docker-compose.yml` 中 volume 的配置语法，但对 volume 在 MySQL 初始化流程中的角色理解不够准确。更好的解法是 Flyway/Liquibase 版本化迁移管理，但这超出了 MVP 阶段的范围。
 
-以下为完整 Bug 记录（引自项目 `process_bug.md`）：
-
----
-
-### 附录二：开发过程 Bug 完整记录（process_bug.md）
-
-**BUG-001：登录返回 302 重定向** | 归因：模型上下文不够
-- 现象：POST `/api/auth/login` 返回 302，跳转到 `http://localhost/login`（无端口）
-- 根因：SecurityConfig 注释 `@EnableWebSecurity` 但无 `SecurityFilterChain` bean，触发 Spring Boot auto-config formLogin
-- 解法：恢复 `@EnableWebSecurity` + 显式定义 `SecurityFilterChain` bean 全放行
-
-**BUG-002：登录成功但 userInfo 为空** | 归因：需求描述不清楚
-- 现象：登录 200 但 localStorage.userInfo 为空，admin 和 student 界面相同
-- 根因：`AuthServiceImpl.login()` 只做密码校验，返回空 LoginResponse
-- 解法：login() 查询 roles/permissions 构建 UserInfoResponse 随响应返回
-
-**BUG-003：所有用户登录后跳转学生端** | 归因：需求拆解不够细
-- 现象：admin 登录跳到 `/student/rooms`
-- 根因：`Login.tsx` 写死 `navigate('/student/rooms')`
-- 解法：读 `localStorage.userInfo.userType`，ADMIN 跳 `/admin/dashboard`，STUDENT 跳 `/student/rooms`
-
-**BUG-004：数据库中文乱码** | 归因：模型上下文不够
-- 现象：前端显示 `å›¾ä¹¦é¦†301` 等乱码
-- 根因：`init.sql` 头部缺 `SET NAMES utf8mb4`，MySQL 客户端用 latin1 解析
-- 解法：头部加三行 SET NAMES / CHARACTER SET / character_set_connection 声明
-
-**BUG-005：Dockerfile 构建失败** | 归因：需求描述不清楚
-- 现象：后端 `mvn: command not found`；前端 pnpm 版本不兼容
-- 根因：基础 JDK 镜像无 Maven；Node 20 不支持 pnpm 11
-- 解法：`eclipse-temurin:21-jdk` → `maven:3.9-eclipse-temurin-21`；`node:20` → `node:22`
-
-**BUG-006：前端构建验证不完整** | 归因：开发者 taste 不对
-- 现象：`tsc -b` 通过但 `vite build` 报错
-- 根因：`tsc -b` 只做类型检查，不等价于 `vite build`
-- 解法：推送前必须执行完整 `pnpm build`（tsc + vite）
-
-**BUG-007：pnpm 被内部 npm registry 污染** | 归因：环境约束未传达
-- 现象：`npm install` 报包缺失，`package.json` 被篡改写入内部源地址
-- 根因：内部 registry 包不全且修改配置文件
-- 解法：全部改用 pnpm + 公共源，写入项目强约束
-
-**BUG-008：unrelated histories** | 归因：技术方案副作用考虑不足
-- 现象：`git pull` 报 `refusing to merge unrelated histories`
-- 根因：`git subtree split` 历史与 clone 历史无公共祖先
-- 解法：`git fetch origin && git reset --hard origin/main`
-
-**BUG-009：批量座位生成 UI 被覆盖** | 归因：需求描述不清楚
-- 现象：同步组员 B 代码后批量生成功能消失
-- 根因：`git checkout huawei-frontend/main -- src/` 整目录覆盖
-- 解法：`git show <branch>:<file>` 从历史分支恢复
-
-**BUG-010：MySQL Volume 不清 init.sql 不生效** | 归因：开发者 taste 不对
-- 现象：更新 init.sql 重启后数据仍是旧的
-- 根因：volume 存在时 MySQL 跳过 init.sql 执行
-- 解法：`podman-compose down -v` 清 volume 后重建
-
-**BUG-011：文件放到 monorepo 根目录** | 归因：模型上下文不够
-- 现象：`git checkout huawei-backend/main -- src/` 后 src/ 出现在根目录
-- 根因：checkout 按原路径存放，monorepo 路径映射未考虑
-- 解法：用 `git show <remote>:<path> > <local_path>` 指定目标路径
-
-**BUG-012：华为云 main 分支保护拒绝 force push** | 归因：环境约束未传达
-- 现象：force push main 被拒，报 non-fast-forward
-- 根因：CodeHub main 分支设置保护规则，需 MR 合并
-- 解法：推临时分支，Web UI 创建 MR 合并
+以下为完整 Bug 记录详见文末附录二。
 
 ---
 
@@ -707,3 +565,15 @@ AI 将"会写代码"这个技能的门槛大幅降低，但将"会管理 AI"（�
 
 *本文基于 SeatFlow 项目真实开发过程撰写。项目代码：https://github.com/hfutwz/openclaw-project-agent*
 *华为云后端仓库：seat_booking_server | 华为云前端仓库：seat_booking_web*
+
+---
+
+## 附录
+
+### 附录一：团队协作冲突完整记录（team_work_coding.md）
+
+> 详见正文第五章，已完整收录。
+
+---
+
+### 附录二：开发过程 Bug 完整记录（process_bug.md）
