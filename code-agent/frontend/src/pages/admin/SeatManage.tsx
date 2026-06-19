@@ -89,30 +89,29 @@ const SeatManage: React.FC = () => {
     }
   }
 
-  // 批量生成座位
+  // 批量生成座位（左上角+右下角坐标方式）
   const handleBatchGenerate = async () => {
     const values = await batchForm.validateFields()
-    const { rows, cols, socketType, windowRows, corridorCols } = values
-    const winRows: number[] = (windowRows || '')
-      .split(',')
-      .map((s: string) => parseInt(s.trim()))
-      .filter((n: number) => !isNaN(n))
-    const rawCorrCols: number[] = (corridorCols || '')
-      .split(',')
-      .map((s: string) => parseInt(s.trim()))
-      .filter((n: number) => !isNaN(n))
+    const { startRow, startCol, endRow, endCol, socketType, windowRow, corridorCol } = values
 
+    if (endRow < startRow || endCol < startCol) {
+      message.error('右下角坐标必须大于等于左上角坐标')
+      return
+    }
+
+    const totalRows = endRow - startRow + 1
+    const totalCols = endCol - startCol + 1
     const rowLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     const requests: object[] = []
 
-    for (let r = 1; r <= rows; r++) {
-      for (let c = 1; c <= cols; c++) {
-        const seatNumber = `${rowLetters[r - 1]}${c}`
-        // 将负数列号转为实際列号（-1 => cols）
-        const resolvedCorrCols = rawCorrCols.map((n: number) => n < 0 ? cols + n + 1 : n)
+    for (let r = startRow; r <= endRow; r++) {
+      for (let c = startCol; c <= endCol; c++) {
+        // 编号：行用字母（从A开始按实际行号），列用数字
+        const rowLetter = rowLetters[r - 1] || `R${r}`
+        const seatNumber = `${rowLetter}${c}`
         let position = 'MIDDLE'
-        if (winRows.includes(r)) position = 'WINDOW'
-        else if (resolvedCorrCols.includes(c)) position = 'CORRIDOR'
+        if (windowRow && r === windowRow) position = 'WINDOW'
+        else if (corridorCol && (c === corridorCol || c === endCol + startCol - corridorCol)) position = 'CORRIDOR'
         requests.push({ seatNumber, rowNum: r, colNum: c, socketType, position, status: 'AVAILABLE' })
       }
     }
@@ -120,7 +119,7 @@ const SeatManage: React.FC = () => {
     setBatchLoading(true)
     try {
       await seatApi.adminBatchCreate(rid, requests)
-      message.success(`成功生成 ${requests.length} 个座位`)
+      message.success(`成功生成 ${requests.length} 个座位（${totalRows}行 × ${totalCols}列）`)
       setBatchModalOpen(false)
       batchForm.resetFields()
       fetchSeats()
@@ -184,7 +183,7 @@ const SeatManage: React.FC = () => {
             onClick={() => {
               if (!selectedRoomId) { message.warning('请先选择自习室'); return }
               batchForm.resetFields()
-              batchForm.setFieldsValue({ rows: 4, cols: 6, socketType: 'NONE', windowRows: '1', corridorCols: '1,-1' })
+              batchForm.setFieldsValue({ startRow: 1, startCol: 1, endRow: 5, endCol: 7, socketType: 'NONE', windowRow: 1, corridorCol: 1 })
               setBatchModalOpen(true)
             }}
           >批量生成座位</Button>
@@ -258,23 +257,61 @@ const SeatManage: React.FC = () => {
         confirmLoading={batchLoading}
         onCancel={() => setBatchModalOpen(false)}
         destroyOnClose
-        width={480}
+        width={500}
       >
         <Alert
-          message="系统按行列矩阵自动生成座位，编号格式 A1、A2…B1、B2…"
+          message="输入左上角和右下角坐标，系统自动生成矩形区域内所有座位"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
         <Form form={batchForm} layout="vertical">
-          <Space style={{ width: '100%' }} size={16}>
-            <Form.Item name="rows" label="行数" rules={[{ required: true }]} style={{ flex: 1, marginBottom: 8 }}>
-              <InputNumber min={1} max={26} style={{ width: '100%' }} placeholder="如 4" />
-            </Form.Item>
-            <Form.Item name="cols" label="列数" rules={[{ required: true }]} style={{ flex: 1, marginBottom: 8 }}>
-              <InputNumber min={1} max={30} style={{ width: '100%' }} placeholder="如 6" />
-            </Form.Item>
-          </Space>
+          <Divider plain style={{ margin: '4px 0 12px' }}>📍 区域坐标</Divider>
+          <div style={{ display: 'flex', gap: 24 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500, marginBottom: 8, color: '#52c41a' }}>↖ 左上角</div>
+              <Space>
+                <Form.Item name="startRow" label="行" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                  <InputNumber min={1} max={26} style={{ width: 70 }} placeholder="1" />
+                </Form.Item>
+                <Form.Item name="startCol" label="列" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                  <InputNumber min={1} max={50} style={{ width: 70 }} placeholder="1" />
+                </Form.Item>
+              </Space>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500, marginBottom: 8, color: '#ff4d4f' }}>↘ 右下角</div>
+              <Space>
+                <Form.Item name="endRow" label="行" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                  <InputNumber min={1} max={26} style={{ width: 70 }} placeholder="5" />
+                </Form.Item>
+                <Form.Item name="endCol" label="列" rules={[{ required: true }]} style={{ marginBottom: 8 }}>
+                  <InputNumber min={1} max={50} style={{ width: 70 }} placeholder="7" />
+                </Form.Item>
+              </Space>
+            </div>
+          </div>
+          <Form.Item
+            noStyle
+            shouldUpdate={(prev, cur) =>
+              prev.startRow !== cur.startRow || prev.startCol !== cur.startCol ||
+              prev.endRow !== cur.endRow || prev.endCol !== cur.endCol
+            }
+          >
+            {({ getFieldValue }) => {
+              const sr = getFieldValue('startRow') || 0
+              const sc = getFieldValue('startCol') || 0
+              const er = getFieldValue('endRow') || 0
+              const ec = getFieldValue('endCol') || 0
+              const count = er >= sr && ec >= sc ? (er - sr + 1) * (ec - sc + 1) : 0
+              return count > 0 ? (
+                <div style={{ textAlign: 'center', marginBottom: 12, color: '#1890ff', fontWeight: 500 }}>
+                  将生成 {er - sr + 1} 行 × {ec - sc + 1} 列 = <span style={{ fontSize: 16 }}>{count}</span> 个座位
+                </div>
+              ) : null
+            }}
+          </Form.Item>
+          <Divider plain style={{ margin: '4px 0 12px' }}>⚙️ 属性设置</Divider>
           <Form.Item name="socketType" label="默认插座类型" rules={[{ required: true }]}>
             <Select options={[
               { value: 'NONE', label: '无插座' },
@@ -282,21 +319,25 @@ const SeatManage: React.FC = () => {
               { value: 'TRACK', label: '🔌 移动导轨插座' },
             ]} />
           </Form.Item>
-          <Divider plain style={{ margin: '8px 0' }}>位置自动标记规则</Divider>
-          <Form.Item
-            name="windowRows"
-            label="靠窗行（逗号分隔行号）"
-            extra="如输入 1 则第1行为靠窗座位，留空则不标记靠窗"
-          >
-            <Input placeholder="1" />
-          </Form.Item>
-          <Form.Item
-            name="corridorCols"
-            label="靠走廊列（逗号分隔，-1 表示最后一列）"
-            extra="如输入 1,-1 则第1列和最后一列为靠走廊座位"
-          >
-            <Input placeholder="1,-1" />
-          </Form.Item>
+          <Divider plain style={{ margin: '4px 0 12px' }}>🏷️ 位置自动标记（可选）</Divider>
+          <Space style={{ width: '100%' }} size={16}>
+            <Form.Item
+              name="windowRow"
+              label="靠窗行号"
+              extra="留空不标记"
+              style={{ flex: 1 }}
+            >
+              <InputNumber min={1} max={26} style={{ width: '100%' }} placeholder="如 1" />
+            </Form.Item>
+            <Form.Item
+              name="corridorCol"
+              label="靠走廊列号"
+              extra="对称列自动标记"
+              style={{ flex: 1 }}
+            >
+              <InputNumber min={1} max={50} style={{ width: '100%' }} placeholder="如 1" />
+            </Form.Item>
+          </Space>
         </Form>
       </Modal>
     </div>
