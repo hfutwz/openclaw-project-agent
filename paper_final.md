@@ -63,7 +63,25 @@ Lab 采用用户故事（User Story）作为最小任务粒度，共识别17个�
 | US-A05 | 维护角色和权限（RBAC） | P0 | 组员B |
 | US-A06 | 调整系统参数 | P2 | 组员B |
 
-### 2.3 我的工作：Vibe Coding 准备与架构设计
+### 2.3 AI 使用透明度
+
+本项目所有代码均在 AI 辅助下生成，具体环节说明如下：
+
+| 环节 | AI 工具 | 人工介入程度 | 备注 |
+|---|---|---|---|
+| 需求分析与 PRD 撰写 | Claude 3.7 Sonnet | 高 | 人工主导框架，AI 补全细节 |
+| 开发计划（Plan） | Claude 3.7 Sonnet | 高 | 人工主导架构设计与用户故事拆解，AI 生成结构化文档 |
+| 后端代码生成（Spring Boot） | Claude 3.7 Sonnet | 中 | AI 生成初稿，人工修复 Bug |
+| 前端代码生成（React+Ant Design） | Claude 3.7 Sonnet | 中 | AI 生成，人工联调 |
+| 数据库 schema 设计 | Claude 3.7 Sonnet | 高 | 人工主导表结构，AI 生成 DDL |
+| CI/CD 配置 | Claude 3.7 Sonnet | 低 | AI 生成，轻微调整 |
+| 代码 Review | Claude 3.7 Sonnet | 中 | Review Agent 独立上下文审查，人工确认并决策 |
+| 测试样例生成 | Claude 3.7 Sonnet | 中 | Test Agent 生成用例，人工执行验证 |
+| Bug 修复 | Claude 3.7 Sonnet | 中 | AI 定位根因，人工确认修复方向 |
+
+---
+
+### 2.4 我的工作：Vibe Coding 准备与架构设计
 
 我在本项目中承担了两个核心职责：**搭建 Vibe Coding 基础设施**（让 AI 能高效参与整个开发过程）以及**主导系统架构设计**（为团队开发提供统一的技术基准）。
 
@@ -85,7 +103,7 @@ Lab 采用用户故事（User Story）作为最小任务粒度，共识别17个�
 3. **前端项目结构（页面/组件/服务拆分）**
 4. **接口规范（命名、版本、统一返回格式）**
 
-### 2.4 ER 图与数据库设计
+### 2.5 ER 图与数据库设计
 
 数据库采用 MySQL 8.0，共设计13张核心表。核心 ER 关系如下：
 
@@ -116,7 +134,7 @@ Lab 采用用户故事（User Story）作为最小任务粒度，共识别17个�
 - **预约状态机**：`ReservationStatus` 枚举为 `PENDING → CHECKED_IN → COMPLETED / CANCELLED`，状态转换由定时任务和业务接口共同驱动
 - **SystemConfig 表**：k-v 结构存储系统参数（如最大预约小时数），支持运行时调整，不硬编码在代码中
 
-### 2.5 后端架构设计
+### 2.6 后端架构设计
 
 后端采用 **Spring Boot 3 + JDK 21 + MyBatis Plus + MySQL 8.0**，严格五层分离：
 
@@ -147,7 +165,7 @@ com.seatflow/
 - 数据库字段命名用下划线，Java 字段用驼峰，通过 MyBatis Plus 自动映射
 - 接口版本前缀统一为 `/api/`，管理端接口加 `/admin/` 中缀
 
-### 2.6 前端架构设计
+### 2.7 前端架构设计
 
 前端采用 **React 19 + TypeScript + Ant Design + Vite**，构建工具强制使用 pnpm：
 
